@@ -584,7 +584,6 @@ async function renderSummary(data) {
   const card = document.getElementById('summaryCard');
   card.innerHTML = `<div class="summary-loading"><div class="spinner-dark"></div>Analizando el mes...</div>`;
 
-  // Build category spend map
   const categorySpend = {};
   data.forEach(r => {
     if (!r.category || r.finance_category === 'Not Considered') return;
@@ -603,12 +602,25 @@ async function renderSummary(data) {
     : INCOME_TARGET;
   const grandTotal = income + spentSoFar;
 
+  // Last transaction date in this month
+  const dates = data
+    .map(r => r.date?.value || r.date)
+    .filter(Boolean)
+    .sort();
+  const lastTransactionDate = dates[dates.length - 1] || selectedMonth + '-01';
+
+  // Today's date
+  const today = new Date().toISOString().slice(0, 10);
+
   try {
     const res = await fetch('/api/summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         month: formatMonth(selectedMonth),
+        monthKey: selectedMonth,
+        today,
+        lastTransactionDate,
         categorySpend,
         targets: CATEGORY_TARGETS,
         grandTotal,
