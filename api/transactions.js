@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       week,
       finance_class,
       finance_category
-    FROM \`spark-datahub.cashflow.data_bank\`
+    FROM \`spark-datahub.cashflow.data_bank_native\`
     WHERE DATE_TRUNC(date, MONTH) = DATE_TRUNC(CURRENT_DATE(), MONTH)
     ORDER BY date DESC
   `;
