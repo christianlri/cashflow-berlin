@@ -400,24 +400,48 @@
 <script>
 const API_URL = '/api/transactions';
 
-const LIFE_UNITS = [
-  { key: 'Groceries',    emoji: '🛒', label: 'idas al súper',    avgEur: 55,  color: 'ok'   },
-  { key: 'Delivery',     emoji: '🛵', label: 'pedidos delivery', avgEur: 12,  color: 'warn' },
-  { key: 'Food',         emoji: '🍽️', label: 'salidas a comer',  avgEur: 28,  color: 'warn' },
-  { key: 'Transport',    emoji: '🚌', label: 'semanas de BVG',   avgEur: 60,  color: 'ok'   },
-];
+// ── TARGETS ──────────────────────────────────────────────────────────────────
+const INCOME_TARGET = 5136;
+const TCF_TARGET = 1776;
 
-const PL_LAYERS = [
-  { key: '1. Earnings Net',          label: 'Sueldo neto',         dot: '#3a7a5a', income: true  },
-  { key: '2. Foundational Margin',   label: 'Después de renta',    dot: '#c94040'               },
-  { key: '3. Vital Surplus',         label: 'Vital Surplus',       dot: '#b07020'               },
-  { key: '4. Quality of Life Margin',label: 'Quality of Life',     dot: '#5b8cbf'               },
-  { key: '5. True Cash Flow',        label: 'True Cash Flow',      dot: '#1a1612'               },
+const CATEGORY_TARGETS = {
+  Rent:                 -1800,
+  Network:               -100,
+  Transport:             -120,
+  'Non Food Groceries':   -40,
+  Housing:               -100,
+  Health:                 -80,
+  Hair:                     0,
+  Parking:                  0,
+  Groceries:             -360,
+  Subscription:           -50,
+  Services:               -20,
+  Food:                  -200,
+  Trip:                  -200,
+  Tech:                   -40,
+  Pet:                    -20,
+  Other:                  -50,
+  Delivery:               -80,
+  Clothing:              -100,
+};
+
+const LIFE_UNITS = [
+  { key: 'Groceries', emoji: '🛒', label: 'idas al súper',    avgEur: 45 },
+  { key: 'Delivery',  emoji: '🛵', label: 'pedidos delivery', avgEur: 12 },
+  { key: 'Food',      emoji: '🍽️', label: 'salidas a comer',  avgEur: 25 },
+  { key: 'Clothing',  emoji: '👗', label: 'compras de ropa',  avgEur: 60 },
 ];
 
 let allData = [];
 let months = [];
 let selectedMonth = null;
+
+function dhSalaryArrived(data) {
+  return data.some(r =>
+    r.commerce && r.commerce.toLowerCase().includes('delivery hero se') &&
+    parseFloat(r.eur_amount) > 0
+  );
+}
 
 async function loadData() {
   try {
@@ -487,94 +511,107 @@ function renderAll() {
   renderCategories(data);
 }
 
-function sumByCategory(data, category) {
-  return data
-    .filter(r => r.category === category && r.finance_category !== 'Not Considered')
-    .reduce((s, r) => s + Math.abs(parseFloat(r.eur_amount) || 0), 0);
-}
-
-function sumByPLLayer(data, layer) {
-  return data
-    .filter(r => r.finance_category === layer)
-    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
-}
-
 function renderHero(data) {
-  // Grand Total = SUM of all rows excluding Not Considered
-  const grandTotal = data
-    .filter(r => r.finance_category !== 'Not Considered')
+  const salaryArrived = dhSalaryArrived(data);
+  const spentSoFar = data
+    .filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0)
     .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+  const income = salaryArrived
+    ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0)
+    : INCOME_TARGET;
+  const net = income + spentSoFar;
+  const vsTarget = net - TCF_TARGET;
 
   const el = document.getElementById('heroAmount');
   const noteEl = document.getElementById('heroNote');
-  el.textContent = `€${Math.round(grandTotal).toLocaleString('de-DE')}`;
-  el.className = `hero-amount ${grandTotal >= 0 ? 'positive' : 'negative'}`;
-  noteEl.textContent = grandTotal >= 0 ? 'para lo que quieran 🎉' : 'mes ajustado 😅';
+  el.textContent = `€${Math.round(net).toLocaleString('de-DE')}`;
+  el.className = `hero-amount ${net >= TCF_TARGET ? 'positive' : 'negative'}`;
+  const salaryNote = salaryArrived ? '' : ' <span style="font-size:11px;opacity:0.5">(sueldo estimado)</span>';
+  const vsStr = vsTarget >= 0
+    ? `+€${Math.round(vsTarget).toLocaleString('de-DE')} sobre el target 🎉`
+    : `-€${Math.abs(Math.round(vsTarget)).toLocaleString('de-DE')} bajo el target 😬`;
+  noteEl.innerHTML = vsStr + salaryNote;
 }
 
 function renderLifeUnits(data) {
-  const grandTotal = data
-    .filter(r => r.finance_category !== 'Not Considered')
-    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
-
-  const remaining = Math.max(0, grandTotal);
-
   const grid = document.getElementById('lifeUnitsGrid');
   grid.innerHTML = LIFE_UNITS.map(u => {
-    const spent = sumByCategory(data, u.key);
-    const units = Math.floor(remaining / u.avgEur);
-    const colorClass = units > 5 ? 'ok' : units > 2 ? 'warn' : 'bad';
+    const target = Math.abs(CATEGORY_TARGETS[u.key] || 0);
+    const spent = data
+      .filter(r => r.category === u.key && r.finance_category !== 'Not Considered')
+      .reduce((s, r) => s + Math.abs(parseFloat(r.eur_amount) || 0), 0);
+    const remaining = Math.max(0, target - spent);
+    const unitsRemaining = Math.floor(remaining / u.avgEur);
+    const pct = target > 0 ? Math.min(100, (spent / target) * 100) : 0;
+    const over = spent > target;
+    const colorClass = over ? 'bad' : unitsRemaining <= 1 ? 'warn' : 'ok';
     return `
       <div class="unit-card">
         <span class="unit-emoji">${u.emoji}</span>
-        <div class="unit-count ${colorClass}">${units}</div>
-        <div class="unit-label">${u.label}</div>
-        <div class="unit-detail">gastado: €${Math.round(spent)}</div>
+        <div class="unit-count ${colorClass}">${unitsRemaining}</div>
+        <div class="unit-label">${u.label} restantes</div>
+        <div class="unit-detail">€${Math.round(spent)} de €${target}${over ? ' ⚠️' : ''}</div>
+        <div style="margin-top:8px;background:#e8e2d8;border-radius:4px;height:3px;overflow:hidden">
+          <div style="height:100%;border-radius:4px;width:${pct}%;background:${over ? '#c94040' : '#3a7a5a'};transition:width 0.8s ease"></div>
+        </div>
       </div>`;
   }).join('');
 }
 
 function renderPL(data) {
   const stack = document.getElementById('plStack');
+  const salaryArrived = dhSalaryArrived(data);
 
-  // Use finance_category as source of truth — matches spreadsheet exactly
   const PL_DEFS = [
-    { fc: '1. Earnings Net',           label: 'Ingresos',        dot: '#3a7a5a' },
-    { fc: '2. Foundational Margin',    label: 'Renta & Network', dot: '#c94040' },
-    { fc: '3. Vital Surplus',          label: 'Gastos vitales',  dot: '#b07020' },
-    { fc: '4. Quality of Life Margin', label: 'Calidad de vida', dot: '#5b8cbf' },
-    { fc: '5. True Cash Flow',         label: 'Extras & viajes', dot: '#1a1612' },
+    { fc: '1. Earnings Net',           label: 'Ingresos',        dot: '#3a7a5a', targetAmount: INCOME_TARGET       },
+    { fc: '2. Foundational Margin',    label: 'Renta & Network', dot: '#c94040', targetAmount: -(1800+100)          },
+    { fc: '3. Vital Surplus',          label: 'Gastos vitales',  dot: '#b07020', targetAmount: -(120+40+100+80+360) },
+    { fc: '4. Quality of Life Margin', label: 'Calidad de vida', dot: '#5b8cbf', targetAmount: -(50+20+200)         },
+    { fc: '5. True Cash Flow',         label: 'Extras & viajes', dot: '#1a1612', targetAmount: -(200+40+20+50+80+100) },
   ];
 
   const layers = PL_DEFS.map(def => {
-    const amount = data
+    let actual = data
       .filter(r => r.finance_category === def.fc)
       .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
-    return { ...def, amount };
+    if (def.fc === '1. Earnings Net' && !salaryArrived) actual = INCOME_TARGET;
+    return { ...def, actual };
   });
 
-  // Grand total
-  const grandTotal = data
-    .filter(r => r.finance_category !== 'Not Considered')
+  const spentSoFar = data
+    .filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0)
     .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+  const income = salaryArrived
+    ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0)
+    : INCOME_TARGET;
+  const grandTotal = income + spentSoFar;
 
   stack.innerHTML = [
-    ...layers.map(l => `
-      <div class="pl-row">
-        <div class="pl-left">
-          <div class="pl-dot" style="background:${l.dot}"></div>
-          <div><div class="pl-name">${l.label}</div></div>
-        </div>
-        <div class="pl-amount ${l.amount >= 0 ? 'pos' : 'neg'}">
-          ${l.amount >= 0 ? '+' : ''}€${Math.round(l.amount).toLocaleString('de-DE')}
-        </div>
-      </div>`),
+    ...layers.map(l => {
+      const assumed = l.fc === '1. Earnings Net' && !salaryArrived;
+      return `
+        <div class="pl-row">
+          <div class="pl-left">
+            <div class="pl-dot" style="background:${l.dot}"></div>
+            <div>
+              <div class="pl-name">${l.label}${assumed ? ' <span style="font-size:10px;color:#b0aca7">(estimado)</span>' : ''}</div>
+              <div class="pl-sub">target: ${l.targetAmount >= 0 ? '+' : ''}€${Math.abs(l.targetAmount).toLocaleString('de-DE')}</div>
+            </div>
+          </div>
+          <div class="pl-amount ${l.actual >= 0 ? 'pos' : 'neg'}">
+            ${l.actual >= 0 ? '+' : ''}€${Math.round(l.actual).toLocaleString('de-DE')}
+          </div>
+        </div>`;
+    }),
     `<div class="pl-row" style="border-color:#1a1612;background:#1a1612">
       <div class="pl-left">
         <div class="pl-dot" style="background:#fff"></div>
-        <div><div class="pl-name" style="color:#fff;font-weight:600">Total del mes</div></div>
+        <div>
+          <div class="pl-name" style="color:#fff;font-weight:600">Neto del mes</div>
+          <div class="pl-sub" style="color:rgba(255,255,255,0.4)">target: €${TCF_TARGET.toLocaleString('de-DE')}</div>
+        </div>
       </div>
-      <div class="pl-amount ${grandTotal >= 0 ? 'pos' : 'neg'}" style="font-size:20px">
+      <div class="pl-amount ${grandTotal >= TCF_TARGET ? 'pos' : 'neg'}" style="font-size:20px">
         ${grandTotal >= 0 ? '+' : ''}€${Math.round(grandTotal).toLocaleString('de-DE')}
       </div>
     </div>`
@@ -582,38 +619,49 @@ function renderPL(data) {
 }
 
 function renderCategories(data) {
+  const catColors = {
+    Rent: '#c94040', Groceries: '#3a7a5a', Food: '#b07020',
+    Transport: '#5b8cbf', Health: '#7b5cbf', Clothing: '#bf5b8c',
+    Trip: '#5bbfb0', Subscription: '#8cbf5b', Tech: '#4a7cbf',
+    Delivery: '#e08050', Other: '#b0aca7', Network: '#6b6560',
+    Housing: '#a07040', 'Non Food Groceries': '#60a070', Hair: '#c090b0',
+  };
+
   const cats = {};
   data.forEach(r => {
     if (!r.category || r.finance_category === 'Not Considered') return;
     const eur = parseFloat(r.eur_amount) || 0;
-    if (eur >= 0) return; // only expenses
+    if (eur >= 0) return;
     if (!cats[r.category]) cats[r.category] = 0;
     cats[r.category] += Math.abs(eur);
   });
 
-  const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
-  const max = sorted[0]?.[1] || 1;
+  const allCats = new Set([...Object.keys(cats), ...Object.keys(CATEGORY_TARGETS).filter(c => c !== 'Rent')]);
+  const rows = Array.from(allCats)
+    .map(c => ({ cat: c, spent: cats[c] || 0, target: Math.abs(CATEGORY_TARGETS[c] || 0) }))
+    .filter(r => r.target > 0 || r.spent > 0)
+    .sort((a, b) => b.spent - a.spent);
 
-  const catColors = {
-    Rent: '#c94040', Groceries: '#3a7a5a', Food: '#b07020',
-    Transport: '#5b8cbf', Health: '#7b5cbf', Clothing: '#bf5b8c',
-    Trip: '#5bbfb0', Subscription: '#8cbf5b', Tech: '#5b8cbf',
-    Delivery: '#e08050', Other: '#b0aca7',
-  };
-
-  document.getElementById('catList').innerHTML = sorted.map(([cat, eur]) => {
-    const pct = (eur / max) * 100;
-    const color = catColors[cat] || '#b0aca7';
+  document.getElementById('catList').innerHTML = rows.map(r => {
+    const pct = r.target > 0 ? Math.min(100, (r.spent / r.target) * 100) : 100;
+    const over = r.spent > r.target && r.target > 0;
+    const color = catColors[r.cat] || '#b0aca7';
+    const remaining = r.target - r.spent;
     return `
       <div class="cat-row">
         <div class="cat-bar-wrap">
           <div class="cat-name-row">
-            <span class="cat-name">${cat}</span>
-            <span class="cat-eur">€${Math.round(eur).toLocaleString('de-DE')}</span>
+            <span class="cat-name">${r.cat}</span>
+            <span class="cat-eur" style="color:${over ? '#c94040' : '#1a1612'}">
+              €${Math.round(r.spent)} <span style="font-size:10px;color:#b0aca7">/ €${r.target}</span>${over ? ' ⚠️' : ''}
+            </span>
           </div>
           <div class="cat-bar-bg">
-            <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
+            <div class="cat-bar-fill" style="width:${pct}%;background:${over ? '#c94040' : color}"></div>
           </div>
+          ${r.target > 0 ? `<div style="font-size:10px;color:${remaining >= 0 ? '#3a7a5a' : '#c94040'};margin-top:3px">
+            ${remaining >= 0 ? `€${Math.round(remaining)} restantes` : `€${Math.abs(Math.round(remaining))} sobre el límite`}
+          </div>` : ''}
         </div>
       </div>`;
   }).join('');
