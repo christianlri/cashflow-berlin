@@ -90,7 +90,7 @@ Each item in the array must have:
 - qty: quantity as number (default 1 if not shown)
 - unit_price: price per unit in EUR as number
 - total_price: total price for this line in EUR as number
-- category: one of [Frutas y verduras, Lácteos, Carnes, Bebidas, Snacks, Limpieza, Congelados, Panadería, Otros]
+- category: one of [Frutas y verduras, Lácteos, Carnes, Bebidas, Snacks, Limpieza del Hogar, Cuidado Personal, BWS, Congelados, Panadería, Otros]
 
 Ignore: deposits (PFAND), tax lines, totals, store info, TSE signatures.
 
