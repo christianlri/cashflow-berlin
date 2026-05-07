@@ -63,21 +63,36 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── GET HISTORICAL VENDOR MAP ────────────────────────────────────────────
+  // ── GET HISTORICAL VENDOR MAP + LAST DATES ──────────────────────────────
   if (req.method === 'GET') {
     try {
-      const [rows] = await bigquery.query(`
-        SELECT commerce, category, COUNT(*) as cnt
-        FROM \`spark-datahub.cashflow.data_bank_native\`
-        WHERE commerce IS NOT NULL AND category IS NOT NULL
-        GROUP BY commerce, category
-        ORDER BY cnt DESC
-      `);
+      const [[vendorRows], [dateRows]] = await Promise.all([
+        bigquery.query(`
+          SELECT commerce, category, COUNT(*) as cnt
+          FROM \`spark-datahub.cashflow.data_bank_native\`
+          WHERE commerce IS NOT NULL AND category IS NOT NULL
+          GROUP BY commerce, category
+          ORDER BY cnt DESC
+        `),
+        bigquery.query(`
+          SELECT card, MAX(date) as last_date
+          FROM \`spark-datahub.cashflow.data_bank_native\`
+          WHERE card IN ('N26', 'N26 Family')
+          GROUP BY card
+        `),
+      ]);
+
       const vendorMap = {};
-      rows.forEach(r => {
+      vendorRows.forEach(r => {
         if (!vendorMap[r.commerce]) vendorMap[r.commerce] = r.category;
       });
-      return res.status(200).json({ vendorMap, categories: ALL_CATEGORIES });
+
+      const lastDates = {};
+      dateRows.forEach(r => {
+        lastDates[r.card] = r.last_date?.value || r.last_date;
+      });
+
+      return res.status(200).json({ vendorMap, lastDates, categories: ALL_CATEGORIES });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
