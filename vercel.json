@@ -19,6 +19,10 @@
   },
   "routes": [
     {
+      "src": "/palette",
+      "dest": "/palette.html"
+    },
+    {
       "src": "/clasificar",
       "dest": "/clasificar.html"
     },

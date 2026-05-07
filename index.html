@@ -13,24 +13,14 @@
       --ink-soft: #4a4a5a;
       --ink-muted: #9a9aaa;
       --border: #e8e8f0;
-
-      /* Revolut palette */
       --blue:    #2E428B;
       --violet:  #7377EC;
       --magenta: #B6346B;
       --grad: linear-gradient(135deg, #2E428B 0%, #7377EC 50%, #B6346B 100%);
-      --grad-soft: linear-gradient(135deg, rgba(46,66,139,0.08) 0%, rgba(115,119,236,0.08) 50%, rgba(182,52,107,0.08) 100%);
-
       --green:      #00875a;
       --green-soft: #e6f6f1;
-      --red:        #c0392b;
-      --red-soft:   #fdecea;
-      --amber:      #b45309;
-      --amber-soft: #fef3c7;
-
-      --card: #ffffff;
-      --radius: 16px;
-      --radius-sm: 10px;
+      --radius: 18px;
+      --radius-sm: 12px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,766 +30,167 @@
       background: var(--bg);
       color: var(--ink);
       min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── HEADER ── */
-    header {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-inner {
-      max-width: 480px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 56px;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .logo-mark {
-      width: 28px; height: 28px;
-      background: var(--grad);
-      border-radius: 8px;
-      flex-shrink: 0;
-    }
-    .logo-name {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .month-pill {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--ink-soft);
-    }
-    .classify-btn {
-      background: var(--grad);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'Outfit', sans-serif;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    /* ── LOADING ── */
-    #loading {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 80px 32px;
-      gap: 14px;
-    }
-    .spinner {
-      width: 32px; height: 32px;
-      border: 3px solid var(--border);
-      border-top-color: var(--violet);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 13px; color: var(--ink-muted); font-weight: 400; }
-
-    /* ── MAIN ── */
-    main {
-      padding: 16px 16px 60px;
-      max-width: 480px;
-      margin: 0 auto;
+      padding: 32px 20px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── MONTH TABS ── */
-    .month-tabs {
+    /* ── LOGO ── */
+    .logo-wrap {
       display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding: 4px 0 12px;
-      scrollbar-width: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
     }
-    .month-tabs::-webkit-scrollbar { display: none; }
-    .month-tab {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--ink-soft);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s;
-      font-family: 'Outfit', sans-serif;
-      flex-shrink: 0;
-    }
-    .month-tab.active {
+    .logo-mark {
+      width: 56px; height: 56px;
       background: var(--grad);
-      border-color: transparent;
-      color: white;
+      border-radius: 16px;
     }
-
-    /* ── SECTION LABEL ── */
-    .section-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--ink-muted);
-      margin: 20px 0 10px;
-    }
-
-    /* ── SUMMARY CARD ── */
-    .summary-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-    .summary-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--grad);
-    }
-    .summary-ai-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 10px;
+    .logo-name {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
       background: var(--grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .summary-text {
+    .logo-sub {
       font-size: 13px;
-      line-height: 1.65;
-      color: var(--ink-soft);
-      font-weight: 400;
-    }
-    .summary-loading {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
       color: var(--ink-muted);
       font-weight: 400;
-    }
-    .spinner-sm {
-      width: 14px; height: 14px;
-      border: 2px solid var(--border);
-      border-top-color: var(--violet);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
+      margin-top: -6px;
     }
 
-    /* ── HERO ── */
-    .hero-card {
-      background: var(--grad);
+    /* ── CARDS ── */
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .nav-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px 22px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+    }
+    .nav-card:hover {
+      border-color: var(--violet);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(115,119,236,0.12);
+    }
+    .nav-card:active {
+      transform: translateY(0);
+    }
+
+    .nav-card.primary {
+      background: var(--grad);
+      border-color: transparent;
       color: white;
-      position: relative;
-      overflow: hidden;
     }
-    .hero-card::after {
-      content: '';
-      position: absolute;
-      bottom: -40px; right: -40px;
-      width: 140px; height: 140px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 50%;
+    .nav-card.primary:hover {
+      box-shadow: 0 4px 20px rgba(46,66,139,0.3);
     }
-    .hero-card::before {
-      content: '';
-      position: absolute;
-      top: -20px; left: 30%;
-      width: 80px; height: 80px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 50%;
+
+    .card-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+      width: 44px;
+      text-align: center;
     }
-    .hero-label {
-      font-size: 10px;
+    .card-body { flex: 1; min-width: 0; }
+    .card-title {
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 6px;
+      letter-spacing: -0.3px;
     }
-    .hero-amount {
-      font-size: 44px;
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      line-height: 1;
-      color: white;
-    }
-    .hero-amount.negative { color: rgba(255,255,255,0.7); }
-    .hero-note {
-      font-size: 12px;
-      color: rgba(255,255,255,0.65);
-      margin-top: 8px;
+    .nav-card.primary .card-title { color: white; }
+    .card-desc {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-top: 2px;
       font-weight: 400;
     }
+    .nav-card.primary .card-desc { color: rgba(255,255,255,0.65); }
 
-    /* ── LIFE UNITS ── */
-    .life-units-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+    .card-arrow {
+      font-size: 16px;
+      color: var(--ink-muted);
+      flex-shrink: 0;
     }
-    .unit-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 16px;
-      border: 1px solid var(--border);
-    }
-    .unit-emoji { font-size: 22px; margin-bottom: 8px; display: block; }
-    .unit-count { font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
-    .unit-count.ok   { color: var(--blue); }
-    .unit-count.warn { color: var(--amber); }
-    .unit-count.bad  { color: var(--red); }
-    .unit-label  { font-size: 11px; color: var(--ink-soft); margin-top: 4px; font-weight: 400; }
-    .unit-detail { font-size: 10px; color: var(--ink-muted); margin-top: 2px; }
+    .nav-card.primary .card-arrow { color: rgba(255,255,255,0.6); }
 
-    /* ── P&L STACK ── */
-    .pl-stack { display: flex; flex-direction: column; gap: 8px; }
-    .pl-row {
-      background: var(--white);
-      border-radius: var(--radius-sm);
-      padding: 13px 16px;
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    /* ── ANIMATIONS ── */
+    .logo-wrap { animation: fadeUp 0.4s ease both; }
+    .nav-card:nth-child(1) { animation: fadeUp 0.4s 0.08s ease both; }
+    .nav-card:nth-child(2) { animation: fadeUp 0.4s 0.14s ease both; }
+    .nav-card:nth-child(3) { animation: fadeUp 0.4s 0.20s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .pl-row.total {
-      background: var(--ink);
-      border-color: var(--ink);
-    }
-    .pl-left { display: flex; align-items: center; gap: 10px; }
-    .pl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .pl-name { font-size: 13px; font-weight: 600; color: var(--ink); }
-    .pl-sub  { font-size: 10px; color: var(--ink-muted); margin-top: 1px; font-weight: 400; }
-    .pl-amount { font-size: 16px; font-weight: 700; white-space: nowrap; }
-    .pl-amount.pos { color: var(--green); }
-    .pl-amount.neg { color: var(--red); }
 
-    /* ── CATEGORIES ── */
-    .cat-list { display: flex; flex-direction: column; gap: 6px; }
-    .cat-row {
-      background: var(--white);
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .cat-row:hover { border-color: var(--violet); }
-    .cat-row.open  { border-color: var(--blue); }
-    .cat-row-header { padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
-    .cat-bar-wrap { flex: 1; }
-    .cat-name-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-    .cat-name { font-size: 13px; font-weight: 600; color: var(--ink); }
-    .cat-eur  { font-size: 12px; font-weight: 600; }
-    .cat-bar-bg { background: var(--border); border-radius: 4px; height: 3px; overflow: hidden; }
-    .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
-    .cat-remaining { font-size: 10px; margin-top: 4px; font-weight: 500; }
-    .cat-chevron { font-size: 9px; color: var(--ink-muted); transition: transform 0.2s; flex-shrink: 0; }
-    .cat-row.open .cat-chevron { transform: rotate(180deg); }
-
-    .cat-detail { display: none; border-top: 1px solid var(--border); }
-    .cat-row.open .cat-detail { display: block; }
-    .cat-tx {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 14px;
-      gap: 8px;
-      border-bottom: 1px solid var(--bg);
-    }
-    .cat-tx:last-child { border-bottom: none; }
-    .cat-tx:hover { background: var(--bg); }
-    .cat-tx-vendor { font-size: 12px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
-    .cat-tx-date   { font-size: 10px; color: var(--ink-muted); margin-top: 1px; font-weight: 400; }
-    .cat-tx-amount { font-size: 12px; font-weight: 700; color: var(--red); white-space: nowrap; flex-shrink: 0; }
-
-    /* ── FOOTER ── */
     footer {
-      text-align: center;
-      padding: 20px;
+      margin-top: 40px;
       font-size: 11px;
       color: var(--ink-muted);
       font-weight: 400;
     }
-
-    /* ── ANIMATIONS ── */
-    .fade-in { opacity: 0; transform: translateY(8px); animation: fadeUp 0.35s ease forwards; }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    .fade-in:nth-child(1) { animation-delay: 0.04s; }
-    .fade-in:nth-child(2) { animation-delay: 0.08s; }
-    .fade-in:nth-child(3) { animation-delay: 0.12s; }
-    .fade-in:nth-child(4) { animation-delay: 0.16s; }
-    .fade-in:nth-child(5) { animation-delay: 0.20s; }
-    .fade-in:nth-child(6) { animation-delay: 0.24s; }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="logo">
-      <div class="logo-mark"></div>
-      <div class="logo-name">Palette</div>
-    </div>
-    <div class="header-right">
-      <div class="month-pill" id="currentMonthBadge">cargando...</div>
-      <a href="/clasificar" class="classify-btn">+ Cargar</a>
-    </div>
-  </div>
-</header>
-
-<div id="loading">
-  <div class="spinner"></div>
-  <div class="loading-text">Cargando datos...</div>
-</div>
-
-<main id="mainContent" style="display:none">
-
-  <div class="month-tabs" id="monthTabs"></div>
-
-  <div class="section-label">Análisis del mes</div>
-  <div class="summary-card fade-in" id="summaryCard">
-    <div class="summary-loading">
-      <div class="spinner-sm"></div>
-      Analizando...
-    </div>
+  <div class="logo-wrap">
+    <div class="logo-mark"></div>
+    <div class="logo-name">Palette</div>
+    <div class="logo-sub">¿Qué querés hacer hoy?</div>
   </div>
 
-  <div class="section-label">Neto del mes</div>
-  <div class="hero-card fade-in">
-    <div class="hero-label">True Cash Flow</div>
-    <div class="hero-amount" id="heroAmount">€0</div>
-    <div class="hero-note" id="heroNote">calculando...</div>
-  </div>
-
-  <div class="section-label">¿Cuánto te queda?</div>
-  <div class="life-units-grid fade-in" id="lifeUnitsGrid"></div>
-
-  <div class="section-label">Cómo se fue la plata</div>
-  <div class="pl-stack fade-in" id="plStack"></div>
-
-  <div class="section-label">Por categoría</div>
-  <div class="cat-list fade-in" id="catList"></div>
-
-</main>
-
-<footer>Palette · spark-datahub · BigQuery</footer>
-
-<script>
-const API_URL = '/api/transactions';
-
-const INCOME_TARGET = 5136;
-const TCF_TARGET    = 1776;
-
-const CATEGORY_TARGETS = {
-  Rent: -1800, Network: -100, Transport: -120, 'Non Food Groceries': -40,
-  Housing: -100, Health: -80, Hair: 0, Parking: 0, Groceries: -360,
-  Subscription: -50, Services: -20, Food: -200, Trip: -200, Tech: -40,
-  Pet: -20, Other: -50, Delivery: -80, Clothing: -100,
-};
-
-const LIFE_UNITS = [
-  { key: 'Groceries', emoji: '🛒', label: 'idas al súper',    avgEur: 45 },
-  { key: 'Delivery',  emoji: '🛵', label: 'pedidos delivery', avgEur: 12 },
-  { key: 'Food',      emoji: '🍽️', label: 'salidas a comer',  avgEur: 25 },
-  { key: 'Clothing',  emoji: '👗', label: 'compras de ropa',  avgEur: 60 },
-];
-
-const CAT_COLORS = {
-  Rent: '#2E428B', Groceries: '#00875a', Food: '#b45309',
-  Transport: '#7377EC', Health: '#7b5cbf', Clothing: '#B6346B',
-  Trip: '#0891b2', Subscription: '#059669', Tech: '#4f46e5',
-  Delivery: '#ea580c', Other: '#9a9aaa', Network: '#6b7280',
-  Housing: '#92400e', 'Non Food Groceries': '#065f46', Hair: '#be185d',
-};
-
-let allData = [], months = [], selectedMonth = null;
-
-function dhSalaryArrived(data) {
-  return data.some(r =>
-    r.commerce && r.commerce.toLowerCase().includes('delivery hero se') &&
-    parseFloat(r.eur_amount) > 0
-  );
-}
-
-async function loadData() {
-  try {
-    const res = await fetch(API_URL);
-    allData = await res.json();
-    const monthSet = new Set();
-    allData.forEach(r => {
-      const m = r.month?.value || r.month;
-      if (m) monthSet.add(m.slice(0, 7));
-    });
-    months        = Array.from(monthSet).sort().reverse();
-    selectedMonth = months[0];
-    renderMonthTabs();
-    renderAll();
-    document.getElementById('loading').style.display    = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-  } catch (e) {
-    document.getElementById('loading').innerHTML = `
-      <div style="text-align:center;padding:40px 20px">
-        <div style="font-size:32px;margin-bottom:12px">😬</div>
-        <div style="font-size:14px;color:var(--ink-soft)">Error cargando datos</div>
-        <div style="font-size:11px;color:var(--ink-muted);margin-top:6px">${e.message}</div>
-      </div>`;
-  }
-}
-
-function formatMonth(ym) {
-  const [y, m] = ym.split('-');
-  const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  return `${names[parseInt(m)-1]} ${y.slice(2)}`;
-}
-
-function renderMonthTabs() {
-  document.getElementById('monthTabs').innerHTML = months.map(m => `
-    <div class="month-tab ${m === selectedMonth ? 'active' : ''}" onclick="selectMonth('${m}')">
-      ${formatMonth(m)}
-    </div>`).join('');
-  document.getElementById('currentMonthBadge').textContent = formatMonth(selectedMonth);
-}
-
-function selectMonth(m) {
-  selectedMonth = m;
-  document.getElementById('currentMonthBadge').textContent = formatMonth(m);
-  renderMonthTabs();
-  renderAll();
-}
-
-function getMonthData() {
-  return allData.filter(r => {
-    const m = r.month?.value || r.month || '';
-    return m.startsWith(selectedMonth);
-  });
-}
-
-function renderAll() {
-  const data = getMonthData();
-  renderSummary(data);
-  renderHero(data);
-  renderLifeUnits(data);
-  renderPL(data);
-  renderCategories(data);
-}
-
-// ── SUMMARY CACHE (one call per month per session) ───────────────────────────
-const summaryCache = {};
-
-async function renderSummary(data) {
-  const card = document.getElementById('summaryCard');
-
-  // Return cached result if already generated this session
-  if (summaryCache[selectedMonth]) {
-    card.innerHTML = summaryCache[selectedMonth];
-    return;
-  }
-
-  card.innerHTML = `<div class="summary-loading"><div class="spinner-sm"></div>Analizando...</div>`;
-
-  // ── CATEGORY BEHAVIOR TYPES ──────────────────────────────────────────────
-  const FIXED_CATS  = new Set(['Rent', 'Network', 'Transport']);
-  const ONEOFF_CATS = new Set(['Trip', 'Clothing', 'Tech', 'Christmas Deco']);
-
-  // ── TIME CONTEXT ─────────────────────────────────────────────────────────
-  const today          = new Date();
-  const todayStr       = today.toISOString().slice(0, 10);
-  const [y, m]         = selectedMonth.split('-').map(Number);
-  const daysInMonth    = new Date(y, m, 0).getDate();
-  const isCurrentMonth = today.getFullYear() === y && (today.getMonth() + 1) === m;
-  const dayOfMonth     = isCurrentMonth ? today.getDate() : daysInMonth;
-  const daysLeft       = isCurrentMonth ? daysInMonth - dayOfMonth : 0;
-  const monthProgress  = Math.round((dayOfMonth / daysInMonth) * 100);
-  const weeksElapsed   = dayOfMonth / 7;
-  const weeksLeft      = isCurrentMonth ? daysLeft / 7 : 0;
-
-  // ── PREVIOUS MONTH ONLY as baseline ─────────────────────────────────────
-  const prevMonth = months.find(mo => mo < selectedMonth); // most recent past month
-  const prevMonthSpend = {};
-  if (prevMonth) {
-    allData.forEach(r => {
-      const mo = (r.month?.value || r.month || '').slice(0, 7);
-      if (mo !== prevMonth) return;
-      if (!r.category || r.finance_category === 'Not Considered') return;
-      const eur = parseFloat(r.eur_amount) || 0;
-      if (eur >= 0) return;
-      if (!prevMonthSpend[r.category]) prevMonthSpend[r.category] = 0;
-      prevMonthSpend[r.category] += Math.abs(eur);
-    });
-  }
-
-  // ── CURRENT MONTH SPEND ──────────────────────────────────────────────────
-  const categorySpend = {};
-  data.forEach(r => {
-    if (!r.category || r.finance_category === 'Not Considered') return;
-    const eur = parseFloat(r.eur_amount) || 0;
-    if (eur >= 0) return;
-    if (!categorySpend[r.category]) categorySpend[r.category] = 0;
-    categorySpend[r.category] += Math.abs(eur);
-  });
-
-  // ── SMART PROJECTIONS ────────────────────────────────────────────────────
-  const FOCUS_CATS = ['Groceries','Delivery','Food','Transport','Health','Clothing','Subscription','Trip','Network','Other'];
-
-  const categoryLines = FOCUS_CATS.map(cat => {
-    const spent  = Math.round(categorySpend[cat] || 0);
-    const target = Math.abs(CATEGORY_TARGETS[cat] || 0);
-    const prev   = prevMonthSpend[cat] ? Math.round(prevMonthSpend[cat]) : null;
-    if (spent === 0 && target === 0 && !prev) return null;
-
-    let projection = null, projectionType = 'LINEAR';
-
-    if (isCurrentMonth && dayOfMonth > 0) {
-      if (FIXED_CATS.has(cat)) {
-        projection     = spent;
-        projectionType = 'FIXED';
-      } else if (ONEOFF_CATS.has(cat)) {
-        projection     = Math.round(spent * 1.2);
-        projectionType = 'ONEOFF';
-      } else if (prev !== null) {
-        // Use previous month as baseline — most relevant recent trend
-        projection     = prev;
-        projectionType = 'HISTORICAL';
-      } else if (['Groceries','Food','Delivery'].includes(cat) && weeksElapsed > 0) {
-        const weeklyRate = spent / weeksElapsed;
-        projection       = Math.round(spent + weeklyRate * weeksLeft);
-        projectionType   = 'WEEKLY';
-      } else if (monthProgress > 5) {
-        projection     = Math.round((spent / dayOfMonth) * daysInMonth);
-        projectionType = 'LINEAR';
-      }
-    }
-
-    let status = 'ON_TRACK';
-    if (spent > target && target > 0)                                   status = 'OVER';
-    else if (projection !== null && target > 0 && projection > target * 1.1) status = 'AT_RISK';
-
-    return { cat, spent, target, prev, projection, projectionType, status };
-  }).filter(Boolean);
-
-  // ── SALARY & GRAND TOTAL ─────────────────────────────────────────────────
-  const salaryArrived = dhSalaryArrived(data);
-  const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
-  const income        = salaryArrived ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0) : INCOME_TARGET;
-  const grandTotal    = income + spentSoFar;
-
-  try {
-    const res  = await fetch('/api/summary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        month: formatMonth(selectedMonth), monthKey: selectedMonth,
-        today: todayStr, daysInMonth, dayOfMonth, daysLeft,
-        monthProgress, isCurrentMonth, salaryArrived,
-        grandTotal, tcfTarget: TCF_TARGET, categoryLines,
-      }),
-    });
-    const json = await res.json();
-    if (json.summary) {
-      const html = `<div class="summary-ai-label">✦ Palette AI · ${formatMonth(selectedMonth)}</div><div class="summary-text">${json.summary}</div>`;
-      summaryCache[selectedMonth] = html;
-      card.innerHTML = html;
-    } else throw new Error(json.error || 'Sin respuesta');
-  } catch (e) {
-    card.innerHTML = `<div class="summary-text" style="color:var(--ink-muted)">No se pudo generar el análisis.</div>`;
-  }
-}
-
-function renderHero(data) {
-  const salaryArrived = dhSalaryArrived(data);
-  const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
-  const income        = salaryArrived ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0) : INCOME_TARGET;
-  const net           = income + spentSoFar;
-  const vsTarget      = net - TCF_TARGET;
-
-  const el     = document.getElementById('heroAmount');
-  const noteEl = document.getElementById('heroNote');
-  el.textContent = `€${Math.round(net).toLocaleString('de-DE')}`;
-  el.className   = `hero-amount ${net >= TCF_TARGET ? '' : 'negative'}`;
-  const salaryNote = salaryArrived ? '' : ' <span style="font-size:11px;opacity:0.5">(estimado)</span>';
-  const vsStr      = vsTarget >= 0
-    ? `+€${Math.round(vsTarget).toLocaleString('de-DE')} sobre el target 🎉`
-    : `-€${Math.abs(Math.round(vsTarget)).toLocaleString('de-DE')} bajo el target`;
-  noteEl.innerHTML = vsStr + salaryNote;
-}
-
-function renderLifeUnits(data) {
-  document.getElementById('lifeUnitsGrid').innerHTML = LIFE_UNITS.map(u => {
-    const target         = Math.abs(CATEGORY_TARGETS[u.key] || 0);
-    const spent          = data.filter(r => r.category === u.key && r.finance_category !== 'Not Considered').reduce((s,r) => s+Math.abs(parseFloat(r.eur_amount)||0), 0);
-    const remaining      = Math.max(0, target - spent);
-    const unitsRemaining = Math.floor(remaining / u.avgEur);
-    const pct            = target > 0 ? Math.min(100, (spent / target) * 100) : 0;
-    const over           = spent > target;
-    const colorClass     = over ? 'bad' : unitsRemaining <= 1 ? 'warn' : 'ok';
-    const barColor       = over ? 'var(--red)' : 'var(--blue)';
-    return `
-      <div class="unit-card">
-        <span class="unit-emoji">${u.emoji}</span>
-        <div class="unit-count ${colorClass}">${unitsRemaining}</div>
-        <div class="unit-label">${u.label} restantes</div>
-        <div class="unit-detail">€${Math.round(spent)} de €${target}${over ? ' ⚠️' : ''}</div>
-        <div style="margin-top:8px;background:var(--border);border-radius:4px;height:3px;overflow:hidden">
-          <div style="height:100%;border-radius:4px;width:${pct}%;background:${barColor};transition:width 0.8s ease"></div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderPL(data) {
-  const salaryArrived = dhSalaryArrived(data);
-  const PL_DEFS = [
-    { fc: '1. Earnings Net',           label: 'Ingresos',        dot: '#00875a', targetAmount: INCOME_TARGET        },
-    { fc: '2. Foundational Margin',    label: 'Renta & Network', dot: '#2E428B', targetAmount: -(1800+100)           },
-    { fc: '3. Vital Surplus',          label: 'Gastos vitales',  dot: '#b45309', targetAmount: -(120+40+100+80+360)  },
-    { fc: '4. Quality of Life Margin', label: 'Calidad de vida', dot: '#7377EC', targetAmount: -(50+20+200)          },
-    { fc: '5. True Cash Flow',         label: 'Extras & viajes', dot: '#B6346B', targetAmount: -(200+40+20+50+80+100)},
-  ];
-
-  const layers = PL_DEFS.map(def => {
-    let actual = data.filter(r => r.finance_category === def.fc).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
-    if (def.fc === '1. Earnings Net' && !salaryArrived) actual = INCOME_TARGET;
-    return { ...def, actual };
-  });
-
-  const spentSoFar = data.filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
-  const income     = salaryArrived ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0) : INCOME_TARGET;
-  const grandTotal = income + spentSoFar;
-
-  document.getElementById('plStack').innerHTML = [
-    ...layers.map(l => {
-      const assumed = l.fc === '1. Earnings Net' && !salaryArrived;
-      return `
-        <div class="pl-row">
-          <div class="pl-left">
-            <div class="pl-dot" style="background:${l.dot}"></div>
-            <div>
-              <div class="pl-name">${l.label}${assumed ? ' <span style="font-size:10px;color:var(--ink-muted);font-weight:400">(estimado)</span>' : ''}</div>
-              <div class="pl-sub">target: ${l.targetAmount >= 0 ? '+' : ''}€${Math.abs(l.targetAmount).toLocaleString('de-DE')}</div>
-            </div>
-          </div>
-          <div class="pl-amount ${l.actual >= 0 ? 'pos' : 'neg'}">
-            ${l.actual >= 0 ? '+' : ''}€${Math.round(l.actual).toLocaleString('de-DE')}
-          </div>
-        </div>`;
-    }),
-    `<div class="pl-row total">
-      <div class="pl-left">
-        <div class="pl-dot" style="background:white"></div>
-        <div>
-          <div class="pl-name" style="color:white">Neto del mes</div>
-          <div class="pl-sub" style="color:rgba(255,255,255,0.4)">target: €${TCF_TARGET.toLocaleString('de-DE')}</div>
-        </div>
+  <div class="cards">
+    <a href="/palette" class="nav-card primary">
+      <div class="card-icon">📊</div>
+      <div class="card-body">
+        <div class="card-title">Ver Palette</div>
+        <div class="card-desc">Dashboard de cashflow del mes</div>
       </div>
-      <div class="pl-amount ${grandTotal >= TCF_TARGET ? 'pos' : 'neg'}" style="font-size:18px">
-        ${grandTotal >= 0 ? '+' : ''}€${Math.round(grandTotal).toLocaleString('de-DE')}
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a href="/clasificar" class="nav-card">
+      <div class="card-icon">📂</div>
+      <div class="card-body">
+        <div class="card-title">Cargar CSV</div>
+        <div class="card-desc">Subir extracto de N26 y clasificar transacciones</div>
       </div>
-    </div>`
-  ].join('');
-}
+      <div class="card-arrow">→</div>
+    </a>
 
-function renderCategories(data) {
-  const catTxs = {}, cats = {};
-  data.forEach(r => {
-    if (!r.category || r.finance_category === 'Not Considered') return;
-    const eur = parseFloat(r.eur_amount) || 0;
-    if (eur >= 0) return;
-    if (!cats[r.category])   cats[r.category]   = 0;
-    if (!catTxs[r.category]) catTxs[r.category] = [];
-    cats[r.category] += Math.abs(eur);
-    catTxs[r.category].push({ date: r.date?.value || r.date, commerce: r.commerce, eur });
-  });
+    <a href="/despensa" class="nav-card">
+      <div class="card-icon">🧾</div>
+      <div class="card-body">
+        <div class="card-title">Cargar ticket</div>
+        <div class="card-desc">Subir eBon del súper y ver historial de precios</div>
+      </div>
+      <div class="card-arrow">→</div>
+    </a>
+  </div>
 
-  const allCats = new Set([...Object.keys(cats), ...Object.keys(CATEGORY_TARGETS).filter(c => c !== 'Rent')]);
-  const rows = Array.from(allCats)
-    .map(c => ({ cat: c, spent: cats[c] || 0, target: Math.abs(CATEGORY_TARGETS[c] || 0), txs: catTxs[c] || [] }))
-    .filter(r => r.target > 0 || r.spent > 0)
-    .sort((a, b) => b.spent - a.spent);
+  <footer>Palette · spark-datahub · BigQuery</footer>
 
-  document.getElementById('catList').innerHTML = rows.map(r => {
-    const pct       = r.target > 0 ? Math.min(100, (r.spent / r.target) * 100) : 100;
-    const over      = r.spent > r.target && r.target > 0;
-    const color     = over ? 'var(--red)' : (CAT_COLORS[r.cat] || '#9a9aaa');
-    const remaining = r.target - r.spent;
-    const txsSorted = [...r.txs].sort((a, b) => (b.date||'').localeCompare(a.date||''));
-    const txHtml    = txsSorted.length > 0
-      ? txsSorted.map(tx => `
-          <div class="cat-tx">
-            <div>
-              <div class="cat-tx-vendor">${tx.commerce || '—'}</div>
-              <div class="cat-tx-date">${tx.date || ''}</div>
-            </div>
-            <div class="cat-tx-amount">−€${Math.abs(tx.eur).toFixed(2)}</div>
-          </div>`).join('')
-      : `<div class="cat-tx"><div class="cat-tx-date">Sin transacciones</div></div>`;
-
-    return `
-      <div class="cat-row" onclick="this.classList.toggle('open')">
-        <div class="cat-row-header">
-          <div class="cat-bar-wrap">
-            <div class="cat-name-row">
-              <span class="cat-name">${r.cat}</span>
-              <span class="cat-eur" style="color:${over ? 'var(--red)' : 'var(--ink)'}">
-                €${Math.round(r.spent)}<span style="font-size:10px;color:var(--ink-muted);font-weight:400"> / €${r.target}</span>${over ? ' ⚠️' : ''}
-              </span>
-            </div>
-            <div class="cat-bar-bg">
-              <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
-            </div>
-            ${r.target > 0 ? `<div class="cat-remaining" style="color:${remaining >= 0 ? 'var(--green)' : 'var(--red)'}">
-              ${remaining >= 0 ? `€${Math.round(remaining)} restantes` : `€${Math.abs(Math.round(remaining))} sobre el límite`}
-            </div>` : ''}
-          </div>
-          <div class="cat-chevron">▼</div>
-        </div>
-        <div class="cat-detail">${txHtml}</div>
-      </div>`;
-  }).join('');
-}
-
-loadData();
-</script>
 </body>
 </html>
