@@ -62,6 +62,7 @@ INSTRUCCIONES:
 - 3-4 oraciones en español, tono casual y directo
 - Razona sobre el ritmo REAL considerando los tipos de proyección
 - No alarmes por gastos FIXED que ya se pagaron y no van a crecer
+- Si una categoria esta en cero aun no es posible razonar sobre esa categoria aun, por lo tanto podrias remarcarlo o dejarlo sin comentar.
 - Destaca 1-2 categorías que genuinamente merezcan atención
 - ${isCurrentMonth ? `Con ${daysLeft} días restantes, da 1 recomendación específica y accionable` : 'Mes cerrado — 1 cosa concreta para el próximo mes'}
 - Prosa fluida, sin bullet points, sin saludos`;
