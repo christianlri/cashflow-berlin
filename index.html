@@ -529,6 +529,61 @@ async function renderSummary(data) {
   const card = document.getElementById('summaryCard');
   card.innerHTML = `<div class="summary-loading"><div class="spinner-sm"></div>Analizando...</div>`;
 
+  // ── CATEGORY BEHAVIOR TYPES ──────────────────────────────────────────────
+  // FIXED: one-time monthly charges — already paid, won't grow
+  const FIXED_CATS = new Set(['Rent', 'Network', 'Transport']);
+  // ONEOFF: non-recurring — apply 1.2x buffer, no linear extrapolation
+  const ONEOFF_CATS = new Set(['Trip', 'Clothing', 'Tech', 'Christmas Deco']);
+  // RECURRING: weekly-ish cadence — use historical average or weekly projection
+  // Everything else defaults to linear daily
+
+  // ── TIME CONTEXT ─────────────────────────────────────────────────────────
+  const today         = new Date();
+  const todayStr      = today.toISOString().slice(0, 10);
+  const [y, m]        = selectedMonth.split('-').map(Number);
+  const daysInMonth   = new Date(y, m, 0).getDate();
+  const isCurrentMonth = today.getFullYear() === y && (today.getMonth() + 1) === m;
+  const dayOfMonth    = isCurrentMonth ? today.getDate() : daysInMonth;
+  const daysLeft      = isCurrentMonth ? daysInMonth - dayOfMonth : 0;
+  const monthProgress = Math.round((dayOfMonth / daysInMonth) * 100);
+  const weeksElapsed  = dayOfMonth / 7;
+  const weeksInMonth  = daysInMonth / 7;
+  const weeksLeft     = isCurrentMonth ? (daysLeft / 7) : 0;
+
+  // ── HISTORICAL AVERAGES (past 3 months, excluding current) ───────────────
+  const pastMonths = months.filter(mo => mo < selectedMonth).slice(0, 3);
+  const historicalAvg = {};
+  if (pastMonths.length > 0) {
+    pastMonths.forEach(mo => {
+      const moData = allData.filter(r => {
+        const rm = r.month?.value || r.month || '';
+        return rm.startsWith(mo);
+      });
+      moData.forEach(r => {
+        if (!r.category || r.finance_category === 'Not Considered') return;
+        const eur = parseFloat(r.eur_amount) || 0;
+        if (eur >= 0) return;
+        if (!historicalAvg[r.category]) historicalAvg[r.category] = [];
+        historicalAvg[r.category].push(Math.abs(eur));
+      });
+    });
+    // Sum per month, then average
+    Object.keys(historicalAvg).forEach(cat => {
+      const monthSums = {};
+      pastMonths.forEach(mo => { monthSums[mo] = 0; });
+      allData.forEach(r => {
+        if (r.category !== cat || r.finance_category === 'Not Considered') return;
+        const eur = parseFloat(r.eur_amount) || 0;
+        if (eur >= 0) return;
+        const mo = (r.month?.value || r.month || '').slice(0, 7);
+        if (pastMonths.includes(mo)) monthSums[mo] = (monthSums[mo] || 0) + Math.abs(eur);
+      });
+      const vals = Object.values(monthSums).filter(v => v > 0);
+      historicalAvg[cat] = vals.length > 0 ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+    });
+  }
+
+  // ── CURRENT MONTH SPEND PER CATEGORY ─────────────────────────────────────
   const categorySpend = {};
   data.forEach(r => {
     if (!r.category || r.finance_category === 'Not Considered') return;
@@ -538,19 +593,76 @@ async function renderSummary(data) {
     categorySpend[r.category] += Math.abs(eur);
   });
 
+  // ── SMART PROJECTIONS ────────────────────────────────────────────────────
+  const FOCUS_CATS = ['Groceries','Delivery','Food','Transport','Health','Clothing','Subscription','Trip','Network','Other'];
+
+  const categoryLines = FOCUS_CATS.map(cat => {
+    const spent  = Math.round(categorySpend[cat] || 0);
+    const target = Math.abs(CATEGORY_TARGETS[cat] || 0);
+    if (spent === 0 && target === 0) return null;
+
+    let projection = null, projectionType = 'LINEAR';
+
+    if (isCurrentMonth && dayOfMonth > 0) {
+      if (FIXED_CATS.has(cat)) {
+        // Already paid — projection = what was spent, no growth
+        projection     = spent;
+        projectionType = 'FIXED';
+      } else if (ONEOFF_CATS.has(cat)) {
+        // One-off — buffer 1.2x
+        projection     = Math.round(spent * 1.2);
+        projectionType = 'ONEOFF';
+      } else if (historicalAvg[cat] && pastMonths.length >= 2) {
+        // Use historical average — most reliable
+        projection     = Math.round(historicalAvg[cat]);
+        projectionType = 'HISTORICAL';
+      } else if (['Groceries','Food','Delivery'].includes(cat) && weeksElapsed > 0) {
+        // Weekly cadence — project by weeks remaining
+        const weeklyRate = spent / weeksElapsed;
+        projection       = Math.round(spent + weeklyRate * weeksLeft);
+        projectionType   = 'WEEKLY';
+      } else if (monthProgress > 5) {
+        // Linear daily fallback
+        projection     = Math.round((spent / dayOfMonth) * daysInMonth);
+        projectionType = 'LINEAR';
+      }
+    }
+
+    // Status assessment
+    let status = 'ON_TRACK';
+    if (spent > target && target > 0) {
+      status = 'OVER';
+    } else if (projection !== null && target > 0 && projection > target * 1.1) {
+      status = 'AT_RISK';
+    }
+
+    return { cat, spent, target, projection, projectionType, status };
+  }).filter(Boolean);
+
+  // ── SALARY & GRAND TOTAL ─────────────────────────────────────────────────
   const salaryArrived = dhSalaryArrived(data);
   const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
   const income        = salaryArrived ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0) : INCOME_TARGET;
   const grandTotal    = income + spentSoFar;
-  const dates         = data.map(r => r.date?.value || r.date).filter(Boolean).sort();
-  const lastDate      = dates[dates.length - 1] || selectedMonth + '-01';
-  const today         = new Date().toISOString().slice(0, 10);
 
   try {
     const res  = await fetch('/api/summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ month: formatMonth(selectedMonth), monthKey: selectedMonth, today, lastTransactionDate: lastDate, categorySpend, targets: CATEGORY_TARGETS, grandTotal, tcfTarget: TCF_TARGET, salaryArrived }),
+      body: JSON.stringify({
+        month: formatMonth(selectedMonth),
+        monthKey: selectedMonth,
+        today: todayStr,
+        daysInMonth,
+        dayOfMonth,
+        daysLeft,
+        monthProgress,
+        isCurrentMonth,
+        salaryArrived,
+        grandTotal,
+        tcfTarget: TCF_TARGET,
+        categoryLines,
+      }),
     });
     const json = await res.json();
     if (json.summary) {
