@@ -33,6 +33,53 @@
 
     main { padding: 20px; max-width: 680px; margin: 0 auto; }
 
+    /* ── LAST DATES BANNER ── */
+    .dates-banner {
+      background: var(--ink);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .dates-banner-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .dates-banner-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+    .dates-banner-value { font-size: 13px; color: #fff; font-weight: 500; }
+    .dates-banner-hint { font-size: 10px; color: var(--amber); margin-top: 2px; }
+
+    /* ── FILTER TABS ── */
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .filter-tab {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-tab.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .filter-tab .count {
+      display: inline-block;
+      background: rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 0 6px;
+      margin-left: 4px;
+      font-size: 10px;
+    }
+    .filter-tab.active .count { background: rgba(255,255,255,0.2); }
+
     /* ── UPLOAD ZONE ── */
     .upload-zone {
       background: var(--card);
@@ -166,6 +213,14 @@
 </header>
 
 <main>
+  <!-- LAST DATES BANNER -->
+  <div class="section-label">Últimos registros en BigQuery</div>
+  <div class="dates-banner" id="datesBanner">
+    <div class="dates-banner-item">
+      <div class="dates-banner-label">Cargando...</div>
+    </div>
+  </div>
+
   <!-- UPLOAD -->
   <div class="section-label">Subir CSV de N26</div>
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
@@ -179,6 +234,12 @@
     <div class="section-label">Revisión de transacciones</div>
 
     <div class="stats-bar" id="statsBar"></div>
+
+    <div class="filter-tabs" id="filterTabs">
+      <div class="filter-tab active" onclick="setFilter('all')">Todas <span class="count" id="countAll">0</span></div>
+      <div class="filter-tab" onclick="setFilter('review')">Solo revisar <span class="count" id="countReview">0</span></div>
+      <div class="filter-tab" onclick="setFilter('skipped')">Omitidas <span class="count" id="countSkipped">0</span></div>
+    </div>
 
     <div class="rows-list" id="rowsList"></div>
 
@@ -272,18 +333,54 @@ function mapCard(accountName) {
 
 let parsedRows = [];
 let vendorMap = {};
-let rowStates = []; // 'pending' | 'approved' | 'skipped'
+let rowStates = []; // 'approved' | 'skipped'
+let currentFilter = 'all';
 
-// ── LOAD VENDOR MAP FROM BQ ──────────────────────────────────────────────────
+// Vendors that should always be auto-skipped (internal transfers)
+const AUTO_SKIP_VENDORS = ['main account', 'chris & meli', 'n26 cash26', 'christian la rosa', 'christian jesus'];
+
+function shouldAutoSkip(row) {
+  const v = row.commerce.toLowerCase();
+  if (AUTO_SKIP_VENDORS.some(s => v.includes(s))) return true;
+  if (row.eur_amount > 0 && row.category === 'Finance') return true;
+  return false;
+}
+
+// ── LOAD VENDOR MAP + LAST DATES FROM BQ ────────────────────────────────────
 async function loadVendorMap() {
   try {
     const res = await fetch(CLASSIFY_API);
     const data = await res.json();
     vendorMap = data.vendorMap || {};
+
+    // Render last dates banner
+    const banner = document.getElementById('datesBanner');
+    const lastDates = data.lastDates || {};
+    const cards = ['N26', 'N26 Family'];
+    if (Object.keys(lastDates).length === 0) {
+      banner.innerHTML = `<div class="dates-banner-item"><div class="dates-banner-label">Sin registros aún</div></div>`;
+    } else {
+      banner.innerHTML = cards.map(card => {
+        const d = lastDates[card];
+        if (!d) return '';
+        const date = new Date(d);
+        const formatted = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+        const daysSince = Math.floor((new Date() - date) / 86400000);
+        return `
+          <div class="dates-banner-item">
+            <div class="dates-banner-label">${card}</div>
+            <div class="dates-banner-value">${formatted}</div>
+            <div class="dates-banner-hint">Descarga desde ${formatted} en N26</div>
+          </div>`;
+      }).join('');
+    }
   } catch (e) {
     console.warn('Could not load vendor map:', e.message);
   }
 }
+
+// Load last dates immediately on page load
+loadVendorMap();
 
 // ── FILE HANDLING ────────────────────────────────────────────────────────────
 const uploadZone = document.getElementById('uploadZone');
@@ -297,8 +394,6 @@ fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 async function handleFile(file) {
   if (!file) return;
   uploadZone.innerHTML = `<div class="upload-icon"><span class="spinner"></span></div><div class="upload-title">Procesando...</div>`;
-
-  await loadVendorMap();
 
   const text = await file.text();
   const rows = parseCSV(text);
@@ -319,11 +414,13 @@ async function handleFile(file) {
       original_amount: parseFloat(r['Original Amount']) || eurAmount,
       currency: (r['Original Currency'] || 'eur').toLowerCase(),
       category,
-      source, // 'historical' | 'inferred' | 'manual'
+      source,
     };
   });
 
-  rowStates = parsedRows.map(() => 'approved');
+  // Auto-skip internal transfers
+  rowStates = parsedRows.map(r => shouldAutoSkip(r) ? 'skipped' : 'approved');
+  currentFilter = 'all';
 
   uploadZone.style.display = 'none';
   document.getElementById('classifySection').style.display = 'block';
@@ -333,16 +430,42 @@ async function handleFile(file) {
   updateStats();
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['all','review','skipped'][i] === f);
+  });
+  renderRows();
+}
+
 function renderRows() {
   const list = document.getElementById('rowsList');
-  list.innerHTML = parsedRows.map((r, i) => {
+
+  const visibleIndices = parsedRows.map((r, i) => {
+    if (currentFilter === 'all') return i;
+    if (currentFilter === 'review') return (r.source !== 'historical' && rowStates[i] !== 'skipped') ? i : null;
+    if (currentFilter === 'skipped') return rowStates[i] === 'skipped' ? i : null;
+    return i;
+  }).filter(i => i !== null);
+    const state = rowStates[i];
+    const mapping = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered', finance_class: 'Not Considered' };
+    const selectClass = r.source === 'historical' ? 'historical' : r.source === 'inferred' ? 'inferred' : 'manual';
+
+  if (visibleIndices.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink-muted);font-size:13px">
+      ${currentFilter === 'review' ? '✓ Todo clasificado del historial' : 'No hay transacciones aquí'}
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = visibleIndices.map(i => {
+    const r = parsedRows[i];
     const state = rowStates[i];
     const mapping = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered', finance_class: 'Not Considered' };
     const selectClass = r.source === 'historical' ? 'historical' : r.source === 'inferred' ? 'inferred' : 'manual';
 
     return `
-      <div class="tx-row ${state === 'approved' ? 'approved' : state === 'skipped' ? 'skipped' : ''} fade-in" id="row-${i}">
+      <div class="tx-row ${state === 'approved' ? 'approved' : 'skipped'} fade-in" id="row-${i}">
         <div>
           <div class="tx-date">${r.date}</div>
           <div class="tx-card">${r.card}</div>
@@ -392,6 +515,7 @@ function updateStats() {
   const historical = parsedRows.filter((r, i) => r.source === 'historical' && rowStates[i] !== 'skipped').length;
   const inferred = parsedRows.filter((r, i) => r.source === 'inferred' && rowStates[i] !== 'skipped').length;
   const manual = parsedRows.filter((r, i) => r.source === 'manual' && rowStates[i] !== 'skipped').length;
+  const toReview = parsedRows.filter((r, i) => r.source !== 'historical' && rowStates[i] !== 'skipped').length;
 
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-pill green">✓ ${historical} del historial</div>
@@ -402,6 +526,11 @@ function updateStats() {
 
   document.getElementById('approvedCount').textContent = approved;
   document.getElementById('skipCount').textContent = skipped;
+
+  // Update filter tab counts
+  document.getElementById('countAll').textContent = parsedRows.length;
+  document.getElementById('countReview').textContent = toReview;
+  document.getElementById('countSkipped').textContent = skipped;
 }
 
 // ── LOAD TO BQ ────────────────────────────────────────────────────────────────
