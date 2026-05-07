@@ -7,200 +7,64 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f7f4ef;
-      --ink: #1a1612;
-      --ink-soft: #6b6560;
-      --ink-muted: #b0aca7;
-      --accent: #c94040;
-      --green: #3a7a5a;
-      --green-soft: #d4ece0;
-      --amber: #b07020;
-      --amber-soft: #f5e8cc;
-      --card: #ffffff;
-      --border: #e8e2d8;
+      --bg: #f7f4ef; --ink: #1a1612; --ink-soft: #6b6560; --ink-muted: #b0aca7;
+      --accent: #c94040; --green: #3a7a5a; --green-soft: #d4ece0;
+      --amber: #b07020; --amber-soft: #f5e8cc; --card: #ffffff; --border: #e8e2d8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
-
-    header {
-      background: var(--ink);
-      color: #fff;
-      padding: 24px 24px 20px;
-    }
+    header { background: var(--ink); color: #fff; padding: 24px 24px 20px; }
     .header-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
     .header-title span { color: var(--accent); font-style: italic; }
     .header-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
-
     main { padding: 20px; max-width: 680px; margin: 0 auto; }
-
-    /* ── LAST DATES BANNER ── */
-    .dates-banner {
-      background: var(--ink);
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 16px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .dates-banner-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .dates-banner { background: var(--ink); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .dates-banner-item { display: flex; flex-direction: column; gap: 2px; }
     .dates-banner-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
     .dates-banner-value { font-size: 13px; color: #fff; font-weight: 500; }
     .dates-banner-hint { font-size: 10px; color: var(--amber); margin-top: 2px; }
-
-    /* ── FILTER TABS ── */
-    .filter-tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-    .filter-tab {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--ink-soft);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .filter-tab.active { background: var(--ink); border-color: var(--ink); color: #fff; }
-    .filter-tab .count {
-      display: inline-block;
-      background: rgba(0,0,0,0.1);
-      border-radius: 10px;
-      padding: 0 6px;
-      margin-left: 4px;
-      font-size: 10px;
-    }
-    .filter-tab.active .count { background: rgba(255,255,255,0.2); }
-
-    /* ── UPLOAD ZONE ── */
-    .upload-zone {
-      background: var(--card);
-      border: 2px dashed var(--border);
-      border-radius: 16px;
-      padding: 40px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 20px;
-    }
+    .section-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); margin: 24px 0 10px; }
+    .upload-zone { background: var(--card); border: 2px dashed var(--border); border-radius: 16px; padding: 40px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 20px; }
     .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #fdf8f8; }
     .upload-icon { font-size: 36px; margin-bottom: 12px; }
     .upload-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
     .upload-sub { font-size: 12px; color: var(--ink-muted); }
     #fileInput { display: none; }
-
-    /* ── SECTION LABEL ── */
-    .section-label {
-      font-size: 10px; font-weight: 500; letter-spacing: 1.5px;
-      text-transform: uppercase; color: var(--ink-muted); margin: 24px 0 10px;
-    }
-
-    /* ── STATS BAR ── */
-    .stats-bar {
-      display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
-    }
-    .stat-pill {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500;
-    }
+    .stats-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .stat-pill { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500; }
     .stat-pill.green { background: var(--green-soft); border-color: var(--green); color: var(--green); }
     .stat-pill.amber { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
-    .stat-pill.red { background: #f0dada; border-color: var(--accent); color: var(--accent); }
-
-    /* ── ROWS TABLE ── */
+    .filter-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+    .filter-tab { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; }
+    .filter-tab.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .filter-tab .count { display: inline-block; background: rgba(0,0,0,0.1); border-radius: 10px; padding: 0 6px; margin-left: 4px; font-size: 10px; }
+    .filter-tab.active .count { background: rgba(255,255,255,0.2); }
     .rows-list { display: flex; flex-direction: column; gap: 8px; }
-
-    .tx-row {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: grid;
-      grid-template-columns: 80px 1fr auto;
-      gap: 8px;
-      align-items: center;
-      transition: border-color 0.2s;
-    }
+    .tx-row { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: 80px 1fr auto; gap: 8px; align-items: center; }
     .tx-row.approved { border-color: var(--green); background: #f8fdf9; }
     .tx-row.skipped { opacity: 0.4; }
-
-    .tx-date { font-size: 11px; color: var(--ink-muted); font-weight: 400; }
-    .tx-main { min-width: 0; }
+    .tx-date { font-size: 11px; color: var(--ink-muted); }
+    .tx-card-label { font-size: 10px; color: var(--ink-muted); margin-top: 2px; }
     .tx-vendor { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tx-card { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+    .tx-fc { font-size: 10px; color: var(--ink-muted); margin-top: 2px; }
     .tx-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
     .tx-amount { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; white-space: nowrap; }
     .tx-amount.neg { color: var(--accent); }
     .tx-amount.pos { color: var(--green); }
-
-    /* ── CATEGORY SELECT ── */
-    .cat-select {
-      font-size: 11px; font-weight: 500;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 4px 8px;
-      background: var(--bg);
-      color: var(--ink);
-      cursor: pointer;
-      max-width: 160px;
-    }
+    .cat-select { font-size: 11px; font-weight: 500; border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; background: var(--bg); color: var(--ink); cursor: pointer; max-width: 160px; }
     .cat-select.inferred { border-color: var(--amber); background: var(--amber-soft); color: var(--amber); }
     .cat-select.historical { border-color: var(--green); background: var(--green-soft); color: var(--green); }
     .cat-select.manual { border-color: #5b8cbf; background: #e8f0fa; color: #3a5a8a; }
-    .cat-select.not-considered { border-color: var(--ink-muted); background: #f0ede8; color: var(--ink-muted); }
-
-    /* ── SKIP BUTTON ── */
-    .skip-btn {
-      font-size: 10px; color: var(--ink-muted); background: none; border: none;
-      cursor: pointer; padding: 2px 4px; text-decoration: underline;
-    }
-
-    /* ── BOTTOM BAR ── */
-    .bottom-bar {
-      position: sticky; bottom: 0;
-      background: var(--ink);
-      padding: 16px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
+    .skip-btn { font-size: 10px; color: var(--ink-muted); background: none; border: none; cursor: pointer; padding: 2px 4px; text-decoration: underline; }
+    .bottom-bar { position: sticky; bottom: 0; background: var(--ink); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .bottom-info { font-size: 12px; color: rgba(255,255,255,0.6); }
     .bottom-info strong { color: #fff; }
-    .btn {
-      padding: 10px 20px; border-radius: 10px; font-size: 13px;
-      font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; }
+    .btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-ghost { background: rgba(255,255,255,0.1); color: #fff; }
-
-    /* ── RESULT ── */
-    #resultMsg {
-      background: var(--green-soft); border: 1px solid var(--green);
-      border-radius: 12px; padding: 16px; text-align: center;
-      font-size: 14px; font-weight: 500; color: var(--green);
-      display: none; margin-top: 16px;
-    }
-
-    /* ── LOADING ── */
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: inline-block; vertical-align: middle; margin-right: 6px;
-    }
+    #resultMsg { background: var(--green-soft); border: 1px solid var(--green); border-radius: 12px; padding: 16px; text-align: center; font-size: 14px; font-weight: 500; color: var(--green); display: none; margin-top: 16px; }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .fade-in { opacity: 0; animation: fadeUp 0.3s ease forwards; }
     @keyframes fadeUp { to { opacity: 1; } }
   </style>
@@ -213,7 +77,6 @@
 </header>
 
 <main>
-  <!-- LAST DATES BANNER -->
   <div class="section-label">Últimos registros en BigQuery</div>
   <div class="dates-banner" id="datesBanner">
     <div class="dates-banner-item">
@@ -221,7 +84,6 @@
     </div>
   </div>
 
-  <!-- UPLOAD -->
   <div class="section-label">Subir CSV de N26</div>
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
     <div class="upload-icon">📂</div>
@@ -232,17 +94,13 @@
 
   <div id="classifySection" style="display:none">
     <div class="section-label">Revisión de transacciones</div>
-
     <div class="stats-bar" id="statsBar"></div>
-
-    <div class="filter-tabs" id="filterTabs">
+    <div class="filter-tabs">
       <div class="filter-tab active" onclick="setFilter('all')">Todas <span class="count" id="countAll">0</span></div>
       <div class="filter-tab" onclick="setFilter('review')">Solo revisar <span class="count" id="countReview">0</span></div>
       <div class="filter-tab" onclick="setFilter('skipped')">Omitidas <span class="count" id="countSkipped">0</span></div>
     </div>
-
     <div class="rows-list" id="rowsList"></div>
-
     <div id="resultMsg"></div>
   </div>
 </main>
@@ -288,22 +146,21 @@ const CATEGORY_MAP = {
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_MAP);
 
-// Inference rules by keyword
 const INFERENCE_RULES = [
-  { keywords: ['rewe', 'kaufland', 'lidl', 'netto', 'aldi', 'edeka', 'bio company', 'albert heijn', 'mustafa', 'denns'], cat: 'Groceries' },
-  { keywords: ['wolt', 'delivery hero', 'lieferando', 'uber eats', 'pedidosya'], cat: 'Delivery' },
-  { keywords: ['restaurant', 'cafe', 'kuchi', 'amrit', 'burger king', 'mcdonald', 'starbucks', 'kamps', 'nordsee', 'peter pane', 'ramen', 'sushi', 'pizza', 'ben rahim', 'kilkenny', 'backwerk', 'ditsch', 'barist'], cat: 'Food' },
-  { keywords: ['bvg', 'berliner verkehr', 'u-bahn', 's-bahn', 'bolt', 'lime', 'tier', 'taxi', 'uber', 'navigo', 'tfl'], cat: 'Transport' },
-  { keywords: ['apotheke', 'pharmacy', 'doctor', 'arzt', 'mediserv', 'urban sports', 'docortho', 'ap solutions'], cat: 'Health' },
-  { keywords: ['apple', 'spotify', 'netflix', 'amazon prime', 'audible', 'ring', 'openai', 'suno', 'wolt plus', 'n26 subscription', 'claude'], cat: 'Subscription' },
-  { keywords: ['zara', 'h&m', 'decathlon', 'zalando', 'tk maxx', 'uniqlo', 'corporate benefits', 'sephora'], cat: 'Clothing' },
-  { keywords: ['mediamarkt', 'saturn', 'apple store', 'samsung', 'proton', 'anthropic'], cat: 'Tech' },
-  { keywords: ['jasmin haug', 'miete', 'rent', 'apartment'], cat: 'Rent' },
-  { keywords: ['telefonica', 'vodafone', 'o2', 'telekom', 'gocardless'], cat: 'Network' },
-  { keywords: ['bauhaus', 'ikea', 'obi', 'hornbach', 'amazon'], cat: 'Housing' },
+  { keywords: ['rewe', 'kaufland', 'lidl', 'netto', 'aldi', 'edeka', 'bio company', 'albert heijn', 'mustafa', 'denns', 'japan plaza', 'latino point'], cat: 'Groceries' },
+  { keywords: ['wolt', 'delivery hero innovat', 'lieferando', 'pedidosya groceries'], cat: 'Delivery' },
+  { keywords: ['kuchi', 'amrit', 'burger king', 'mcdonald', 'starbucks', 'kamps', 'nordsee', 'peter pane', 'ramen', 'sushi', 'ben rahim', 'kilkenny', 'backwerk', 'ditsch', 'barist', 'lsp*', 'restaurant', 'cafe', 'hard rock'], cat: 'Food' },
+  { keywords: ['bvg', 'berliner verkehr', 'bolt', 'lime', 'tier', 'navigo', 'tfl', 'db retorno'], cat: 'Transport' },
+  { keywords: ['apotheke', 'mediserv', 'urban sports', 'docortho', 'ap solutions', 'mediosap'], cat: 'Health' },
+  { keywords: ['apple.com/bill', 'spotify', 'netflix', 'audible', 'ring', 'openai', 'suno', 'wolt plus', 'n26 subscription', 'claude.ai', 'proton'], cat: 'Subscription' },
+  { keywords: ['decathlon', 'zalando', 'tk maxx', 'uniqlo', 'corporate benefits', 'sephora'], cat: 'Clothing' },
+  { keywords: ['mediamarkt', 'samsung', 'anthropic'], cat: 'Tech' },
+  { keywords: ['jasmin haug'], cat: 'Rent' },
+  { keywords: ['telefonica', 'gocardless'], cat: 'Network' },
+  { keywords: ['bauhaus', 'ikea', 'obi', 'hornbach'], cat: 'Housing' },
   { keywords: ['delivery hero se'], cat: 'Income' },
-  { keywords: ['francisco del valle', 'jose enrique', 'christian la rosa', 'christian jesus', 'revolut', 'wise', 'cash26', 'n26 cash', 'rundfunk', 'landesamt', 'international baptist'], cat: 'Finance' },
-  { keywords: ['flight', 'hotel', 'airbnb', 'museum', 'ibis', 'booking', 'renfe', 'eurostar', 'abbey road', 'easyjet', 'ryanair', 'caba istanbul', 'amsterdam', 'paris', 'london'], cat: 'Trip' },
+  { keywords: ['francisco del valle', 'jose enrique', 'christian la rosa', 'christian jesus', 'revolut', 'wise', 'cash26', 'n26 cash', 'rundfunk', 'landesamt', 'international baptist', 'main account', 'chris & meli'], cat: 'Finance' },
+  { keywords: ['museum', 'ibis', 'abbey road', 'easyjet', 'ryanair', 'caba istanbul', 'service navigo', 'natural history', 'ziggo', 'laduree', 'haagen', 'tulip'], cat: 'Trip' },
 ];
 
 function inferCategory(vendor) {
@@ -316,103 +173,85 @@ function inferCategory(vendor) {
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-
   function parseLine(line) {
     const result = [];
-    let cur = '';
-    let inQuotes = false;
+    let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
-      if (ch === '"') {
-        inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes) {
-        result.push(cur.trim());
-        cur = '';
-      } else {
-        cur += ch;
-      }
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
     }
     result.push(cur.trim());
     return result;
   }
-
   const headers = parseLine(lines[0]);
-  return lines.slice(1)
-    .filter(l => l.trim())
-    .map(line => {
-      const vals = parseLine(line);
-      const row = {};
-      headers.forEach((h, i) => { row[h] = (vals[i] || '').trim(); });
-      return row;
-    })
-    .filter(r => r['Booking Date'] && r['Partner Name']);
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = parseLine(line);
+    const row = {};
+    headers.forEach((h, i) => { row[h] = (vals[i] || '').trim(); });
+    return row;
+  }).filter(r => r['Booking Date'] && r['Partner Name']);
 }
 
 function mapCard(accountName) {
   if (!accountName) return 'N26';
-  if (accountName.toLowerCase().includes('chris') || accountName.toLowerCase().includes('meli')) return 'N26 Family';
+  const a = accountName.toLowerCase();
+  if (a.includes('chris') || a.includes('meli')) return 'N26 Family';
   return 'N26';
 }
 
-let parsedRows = [];
-let vendorMap = {};
-let rowStates = []; // 'approved' | 'skipped'
-let currentFilter = 'all';
-
-// Vendors that should always be auto-skipped (internal transfers)
-const AUTO_SKIP_VENDORS = ['main account', 'chris & meli', 'n26 cash26', 'christian la rosa', 'christian jesus'];
+const AUTO_SKIP = ['main account', 'chris & meli', 'n26 cash', 'christian la rosa', 'christian jesus', 'jose enrique', 'francisco del valle', 'revolut', 'wise', 'rundfunk', 'landesamt', 'international baptist'];
 
 function shouldAutoSkip(row) {
   const v = row.commerce.toLowerCase();
-  if (AUTO_SKIP_VENDORS.some(s => v.includes(s))) return true;
+  if (AUTO_SKIP.some(s => v.includes(s))) return true;
   if (row.eur_amount > 0 && row.category === 'Finance') return true;
   return false;
 }
 
-// ── LOAD VENDOR MAP + LAST DATES FROM BQ ────────────────────────────────────
+let parsedRows = [], vendorMap = {}, rowStates = [], currentFilter = 'all';
+
 async function loadVendorMap() {
   try {
-    const res = await fetch(CLASSIFY_API);
+    const res  = await fetch(CLASSIFY_API);
     const data = await res.json();
-    vendorMap = data.vendorMap || {};
+    vendorMap  = data.vendorMap || {};
 
-    // Render last dates banner
-    const banner = document.getElementById('datesBanner');
+    const banner    = document.getElementById('datesBanner');
     const lastDates = data.lastDates || {};
-    const cards = ['N26', 'N26 Family'];
+
     if (Object.keys(lastDates).length === 0) {
       banner.innerHTML = `<div class="dates-banner-item"><div class="dates-banner-label">Sin registros aún</div></div>`;
-    } else {
-      banner.innerHTML = cards.map(card => {
-        const d = lastDates[card];
-        if (!d) return '';
-        const date = new Date(d);
-        const formatted = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-        const daysSince = Math.floor((new Date() - date) / 86400000);
-        return `
-          <div class="dates-banner-item">
-            <div class="dates-banner-label">${card}</div>
-            <div class="dates-banner-value">${formatted}</div>
-            <div class="dates-banner-hint">Descarga desde ${formatted} en N26</div>
-          </div>`;
-      }).join('');
+      return;
     }
+
+    banner.innerHTML = ['N26', 'N26 Family'].map(card => {
+      const d = lastDates[card];
+      if (!d) return '';
+      const date      = new Date(d);
+      const formatted = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+      return `
+        <div class="dates-banner-item">
+          <div class="dates-banner-label">${card}</div>
+          <div class="dates-banner-value">${formatted}</div>
+          <div class="dates-banner-hint">Descarga desde ${formatted} en N26</div>
+        </div>`;
+    }).join('');
   } catch (e) {
-    console.warn('Could not load vendor map:', e.message);
+    document.getElementById('datesBanner').innerHTML =
+      `<div class="dates-banner-item"><div class="dates-banner-label" style="color:rgba(255,255,255,0.5)">Error cargando fechas</div></div>`;
   }
 }
 
-// Load last dates immediately on page load
 loadVendorMap();
 
-// ── FILE HANDLING ────────────────────────────────────────────────────────────
 const uploadZone = document.getElementById('uploadZone');
-const fileInput = document.getElementById('fileInput');
-
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+const fileInput  = document.getElementById('fileInput');
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop',      e  => { e.preventDefault(); uploadZone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change',     e  => handleFile(e.target.files[0]));
 
 async function handleFile(file) {
   if (!file) return;
@@ -422,33 +261,27 @@ async function handleFile(file) {
   const rows = parseCSV(text);
 
   parsedRows = rows.map(r => {
-    const vendor = r['Partner Name'] || '';
-    const eurAmount = parseFloat(r['Amount (EUR)']) || 0;
+    const vendor     = r['Partner Name'] || '';
+    const eurAmount  = parseFloat(r['Amount (EUR)']) || 0;
     const historical = vendorMap[vendor];
-    const inferred = inferCategory(vendor);
-    const category = historical || inferred || 'Other';
-    const source = historical ? 'historical' : inferred ? 'inferred' : 'manual';
-
+    const inferred   = inferCategory(vendor);
+    const category   = historical || inferred || 'Other';
+    const source     = historical ? 'historical' : inferred ? 'inferred' : 'manual';
     return {
-      date: r['Booking Date'],
-      card: mapCard(r['Account Name']),
-      commerce: vendor,
-      eur_amount: eurAmount,
+      date: r['Booking Date'], card: mapCard(r['Account Name']),
+      commerce: vendor, eur_amount: eurAmount,
       original_amount: parseFloat(r['Original Amount']) || eurAmount,
       currency: (r['Original Currency'] || 'eur').toLowerCase(),
-      category,
-      source,
+      category, source,
     };
   });
 
-  // Auto-skip internal transfers
-  rowStates = parsedRows.map(r => shouldAutoSkip(r) ? 'skipped' : 'approved');
+  rowStates     = parsedRows.map(r => shouldAutoSkip(r) ? 'skipped' : 'approved');
   currentFilter = 'all';
 
   uploadZone.style.display = 'none';
   document.getElementById('classifySection').style.display = 'block';
   document.getElementById('bottomBar').style.display = 'flex';
-
   renderRows();
   updateStats();
 }
@@ -464,48 +297,43 @@ function setFilter(f) {
 function renderRows() {
   const list = document.getElementById('rowsList');
 
-  const visibleIndices = parsedRows.map((r, i) => {
-    if (currentFilter === 'all') return i;
-    if (currentFilter === 'review') return (r.source !== 'historical' && rowStates[i] !== 'skipped') ? i : null;
-    if (currentFilter === 'skipped') return rowStates[i] === 'skipped' ? i : null;
-    return i;
-  }).filter(i => i !== null);
+  const visible = parsedRows.reduce((acc, r, i) => {
+    if (currentFilter === 'all') acc.push(i);
+    else if (currentFilter === 'review'  && r.source !== 'historical' && rowStates[i] !== 'skipped') acc.push(i);
+    else if (currentFilter === 'skipped' && rowStates[i] === 'skipped') acc.push(i);
+    return acc;
+  }, []);
 
-  if (visibleIndices.length === 0) {
-
-  if (visibleIndices.length === 0) {
+  if (visible.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink-muted);font-size:13px">
       ${currentFilter === 'review' ? '✓ Todo clasificado del historial' : 'No hay transacciones aquí'}
     </div>`;
     return;
   }
 
-  list.innerHTML = visibleIndices.map(i => {
-    const r = parsedRows[i];
-    const state = rowStates[i];
-    const mapping = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered', finance_class: 'Not Considered' };
-    const selectClass = r.source === 'historical' ? 'historical' : r.source === 'inferred' ? 'inferred' : 'manual';
-
+  list.innerHTML = visible.map(i => {
+    const r      = parsedRows[i];
+    const state  = rowStates[i];
+    const map    = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered' };
+    const selCls = r.source === 'historical' ? 'historical' : r.source === 'inferred' ? 'inferred' : 'manual';
     return `
-      <div class="tx-row ${state === 'approved' ? 'approved' : 'skipped'} fade-in" id="row-${i}">
+      <div class="tx-row ${state} fade-in" id="row-${i}">
         <div>
           <div class="tx-date">${r.date}</div>
-          <div class="tx-card">${r.card}</div>
+          <div class="tx-card-label">${r.card}</div>
         </div>
-        <div class="tx-main">
+        <div style="min-width:0">
           <div class="tx-vendor" title="${r.commerce}">${r.commerce}</div>
-          <div style="font-size:10px;color:var(--ink-muted);margin-top:2px">${mapping.finance_category}</div>
+          <div class="tx-fc">${map.finance_category}</div>
         </div>
         <div class="tx-right">
           <div class="tx-amount ${r.eur_amount >= 0 ? 'pos' : 'neg'}">
             ${r.eur_amount >= 0 ? '+' : ''}€${Math.abs(r.eur_amount).toFixed(2)}
           </div>
-          <select class="cat-select ${selectClass}" onchange="changeCategory(${i}, this.value)">
-            ${ALL_CATEGORIES.map(c => `<option value="${c}" ${c === r.category ? 'selected' : ''}>${c}</option>`).join('')}
+          <select class="cat-select ${selCls}" onchange="changeCategory(${i}, this.value)">
+            ${ALL_CATEGORIES.map(c => `<option value="${c}"${c === r.category ? ' selected' : ''}>${c}</option>`).join('')}
           </select>
-          <button class="skip-btn" onclick="toggleSkip(${i})">
-            ${state === 'skipped' ? 'restaurar' : 'omitir'}
-          </button>
+          <button class="skip-btn" onclick="toggleSkip(${i})">${state === 'skipped' ? 'restaurar' : 'omitir'}</button>
         </div>
       </div>`;
   }).join('');
@@ -513,31 +341,28 @@ function renderRows() {
 
 function changeCategory(i, cat) {
   parsedRows[i].category = cat;
-  parsedRows[i].source = 'manual';
-  rowStates[i] = 'approved';
-  renderRows();
-  updateStats();
+  parsedRows[i].source   = 'manual';
+  rowStates[i]           = 'approved';
+  renderRows(); updateStats();
 }
 
 function toggleSkip(i) {
   rowStates[i] = rowStates[i] === 'skipped' ? 'approved' : 'skipped';
-  renderRows();
-  updateStats();
+  renderRows(); updateStats();
 }
 
 function approveAll() {
   rowStates = rowStates.map(s => s === 'skipped' ? 'skipped' : 'approved');
-  renderRows();
-  updateStats();
+  renderRows(); updateStats();
 }
 
 function updateStats() {
-  const approved = rowStates.filter(s => s === 'approved').length;
-  const skipped = rowStates.filter(s => s === 'skipped').length;
-  const historical = parsedRows.filter((r, i) => r.source === 'historical' && rowStates[i] !== 'skipped').length;
-  const inferred = parsedRows.filter((r, i) => r.source === 'inferred' && rowStates[i] !== 'skipped').length;
-  const manual = parsedRows.filter((r, i) => r.source === 'manual' && rowStates[i] !== 'skipped').length;
-  const toReview = parsedRows.filter((r, i) => r.source !== 'historical' && rowStates[i] !== 'skipped').length;
+  const approved   = rowStates.filter(s => s === 'approved').length;
+  const skipped    = rowStates.filter(s => s === 'skipped').length;
+  const historical = parsedRows.filter((r,i) => r.source === 'historical' && rowStates[i] !== 'skipped').length;
+  const inferred   = parsedRows.filter((r,i) => r.source === 'inferred'   && rowStates[i] !== 'skipped').length;
+  const manual     = parsedRows.filter((r,i) => r.source === 'manual'     && rowStates[i] !== 'skipped').length;
+  const toReview   = parsedRows.filter((r,i) => r.source !== 'historical' && rowStates[i] !== 'skipped').length;
 
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-pill green">✓ ${historical} del historial</div>
@@ -545,44 +370,36 @@ function updateStats() {
     ${manual > 0 ? `<div class="stat-pill" style="border-color:#5b8cbf;color:#3a5a8a;background:#e8f0fa">✎ ${manual} manuales</div>` : ''}
     ${skipped > 0 ? `<div class="stat-pill">⊘ ${skipped} omitidas</div>` : ''}
   `;
-
   document.getElementById('approvedCount').textContent = approved;
-  document.getElementById('skipCount').textContent = skipped;
-
-  // Update filter tab counts
-  document.getElementById('countAll').textContent = parsedRows.length;
-  document.getElementById('countReview').textContent = toReview;
-  document.getElementById('countSkipped').textContent = skipped;
+  document.getElementById('skipCount').textContent     = skipped;
+  document.getElementById('countAll').textContent      = parsedRows.length;
+  document.getElementById('countReview').textContent   = toReview;
+  document.getElementById('countSkipped').textContent  = skipped;
 }
 
-// ── LOAD TO BQ ────────────────────────────────────────────────────────────────
 async function loadToDb() {
-  const btn = document.getElementById('loadBtn');
+  const btn    = document.getElementById('loadBtn');
   const toLoad = parsedRows.filter((_, i) => rowStates[i] === 'approved');
   if (!toLoad.length) return;
-
   btn.innerHTML = '<span class="spinner"></span> Cargando...';
-  btn.disabled = true;
-
+  btn.disabled  = true;
   try {
-    const res = await fetch(CLASSIFY_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res  = await fetch(CLASSIFY_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rows: toLoad }),
     });
     const data = await res.json();
-
     if (data.inserted) {
       const msg = document.getElementById('resultMsg');
       msg.style.display = 'block';
-      msg.textContent = `✓ ${data.inserted} transacciones cargadas a BigQuery`;
+      msg.textContent   = `✓ ${data.inserted} transacciones cargadas a BigQuery`;
       document.getElementById('bottomBar').style.display = 'none';
     } else {
       throw new Error(data.error || 'Error desconocido');
     }
   } catch (e) {
     btn.innerHTML = '⚠️ Error — reintentar';
-    btn.disabled = false;
+    btn.disabled  = false;
     alert('Error: ' + e.message);
   }
 }
