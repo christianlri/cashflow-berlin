@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chris & Meli · Berlin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --ink: #1a1612;
+      --ink-soft: #6b6560;
+      --ink-muted: #b0aca7;
+      --accent: #c94040;
+      --accent-soft: #f0dada;
+      --green: #3a7a5a;
+      --green-soft: #d4ece0;
+      --amber: #b07020;
+      --amber-soft: #f5e8cc;
+      --card: #ffffff;
+      --border: #e8e2d8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--ink);
+      color: #fff;
+      padding: 28px 32px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 180px; height: 180px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .header-title span {
+      color: var(--accent);
+      font-style: italic;
+    }
+    .header-subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 4px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .month-badge {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.8);
+      white-space: nowrap;
+    }
+
+    /* ── LOADING ── */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 32px;
+      gap: 12px;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-size: 13px;
+      color: var(--ink-muted);
+      font-weight: 300;
+    }
+
+    /* ── MAIN ── */
+    main {
+      padding: 20px 20px 40px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin: 28px 0 12px;
+    }
+
+    /* ── TRUE CASH FLOW HERO ── */
+    .hero-card {
+      background: var(--ink);
+      border-radius: 20px;
+      padding: 24px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      bottom: -30px; right: -30px;
+      width: 120px; height: 120px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.12;
+    }
+    .hero-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 8px;
+    }
+    .hero-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .hero-amount.positive { color: #6dd4a0; }
+    .hero-amount.negative { color: #e88080; }
+    .hero-note {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 8px;
+    }
+
+    /* ── LIFE UNITS ── */
+    .life-units-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .unit-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px 16px;
+      border: 1px solid var(--border);
+      transition: transform 0.15s ease;
+    }
+    .unit-card:active { transform: scale(0.98); }
+    .unit-emoji {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .unit-count {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .unit-count.ok { color: var(--green); }
+    .unit-count.warn { color: var(--amber); }
+    .unit-count.bad { color: var(--accent); }
+    .unit-label {
+      font-size: 12px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+    .unit-detail {
+      font-size: 10px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+
+    /* ── P&L LAYERS ── */
+    .pl-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pl-row {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pl-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pl-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pl-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .pl-sub {
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-top: 1px;
+    }
+    .pl-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pl-amount.pos { color: var(--green); }
+    .pl-amount.neg { color: var(--accent); }
+
+    /* ── CATEGORY BREAKDOWN ── */
+    .cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cat-row {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cat-bar-wrap {
+      flex: 1;
+    }
+    .cat-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+    .cat-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .cat-eur {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .cat-bar-bg {
+      background: var(--border);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+    .cat-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent);
+      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ── MONTH SELECTOR ── */
+    .month-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+      margin-bottom: 4px;
+    }
+    .month-tabs::-webkit-scrollbar { display: none; }
+    .month-tab {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .month-tab.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in:nth-child(1) { animation-delay: 0.05s; }
+    .fade-in:nth-child(2) { animation-delay: 0.1s; }
+    .fade-in:nth-child(3) { animation-delay: 0.15s; }
+    .fade-in:nth-child(4) { animation-delay: 0.2s; }
+    .fade-in:nth-child(5) { animation-delay: 0.25s; }
+    .fade-in:nth-child(6) { animation-delay: 0.3s; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <div class="header-title">Chris & <span>Meli</span></div>
+      <div class="header-subtitle">Berlin · Cashflow</div>
+    </div>
+    <div class="month-badge" id="currentMonthBadge">cargando...</div>
+  </div>
+</header>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Cargando tus gastos...</div>
+</div>
+
+<main id="mainContent" style="display:none">
+
+  <!-- MONTH TABS -->
+  <div class="month-tabs" id="monthTabs"></div>
+
+  <!-- TRUE CASH FLOW -->
+  <div class="section-label">Tu plata libre</div>
+  <div class="hero-card fade-in">
+    <div class="hero-label">True Cash Flow</div>
+    <div class="hero-amount" id="heroAmount">€0</div>
+    <div class="hero-note" id="heroNote">después de todo</div>
+  </div>
+
+  <!-- LIFE UNITS -->
+  <div class="section-label">¿Cuánto te queda en cosas reales?</div>
+  <div class="life-units-grid fade-in" id="lifeUnitsGrid"></div>
+
+  <!-- P&L LAYERS -->
+  <div class="section-label">Cómo se fue la plata</div>
+  <div class="pl-stack fade-in" id="plStack"></div>
+
+  <!-- CATEGORY BREAKDOWN -->
+  <div class="section-label">Por categoría</div>
+  <div class="cat-list fade-in" id="catList"></div>
+
+</main>
+
+<footer>Actualizado desde BigQuery · spark-datahub</footer>
+
+<script>
+const API_URL = '/api/transactions';
+
+const LIFE_UNITS = [
+  { key: 'Groceries',    emoji: '🛒', label: 'idas al súper',    avgEur: 55,  color: 'ok'   },
+  { key: 'Delivery',     emoji: '🛵', label: 'pedidos delivery', avgEur: 12,  color: 'warn' },
+  { key: 'Food',         emoji: '🍽️', label: 'salidas a comer',  avgEur: 28,  color: 'warn' },
+  { key: 'Transport',    emoji: '🚌', label: 'semanas de BVG',   avgEur: 60,  color: 'ok'   },
+];
+
+const PL_LAYERS = [
+  { key: '1. Earnings Net',          label: 'Sueldo neto',         dot: '#3a7a5a', income: true  },
+  { key: '2. Foundational Margin',   label: 'Después de renta',    dot: '#c94040'               },
+  { key: '3. Vital Surplus',         label: 'Vital Surplus',       dot: '#b07020'               },
+  { key: '4. Quality of Life Margin',label: 'Quality of Life',     dot: '#5b8cbf'               },
+  { key: '5. True Cash Flow',        label: 'True Cash Flow',      dot: '#1a1612'               },
+];
+
+let allData = [];
+let months = [];
+let selectedMonth = null;
+
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    allData = await res.json();
+
+    // Extract unique months
+    const monthSet = new Set();
+    allData.forEach(r => {
+      const m = r.month?.value || r.month;
+      if (m) monthSet.add(m.slice(0, 7)); // YYYY-MM
+    });
+    months = Array.from(monthSet).sort().reverse();
+    selectedMonth = months[0];
+
+    renderMonthTabs();
+    renderAll();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  } catch (e) {
+    document.getElementById('loading').innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:12px">😬</div>
+        <div style="font-size:14px;color:#6b6560">Error cargando datos</div>
+        <div style="font-size:11px;color:#b0aca7;margin-top:6px">${e.message}</div>
+      </div>`;
+  }
+}
+
+function formatMonth(ym) {
+  const [y, m] = ym.split('-');
+  const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${names[parseInt(m)-1]} ${y.slice(2)}`;
+}
+
+function renderMonthTabs() {
+  const container = document.getElementById('monthTabs');
+  container.innerHTML = months.map(m => `
+    <div class="month-tab ${m === selectedMonth ? 'active' : ''}" onclick="selectMonth('${m}')">
+      ${formatMonth(m)}
+    </div>
+  `).join('');
+
+  document.getElementById('currentMonthBadge').textContent = formatMonth(selectedMonth);
+}
+
+function selectMonth(m) {
+  selectedMonth = m;
+  document.getElementById('currentMonthBadge').textContent = formatMonth(m);
+  renderMonthTabs();
+  renderAll();
+}
+
+function getMonthData() {
+  return allData.filter(r => {
+    const m = r.month?.value || r.month || '';
+    return m.startsWith(selectedMonth);
+  });
+}
+
+function renderAll() {
+  const data = getMonthData();
+  renderHero(data);
+  renderLifeUnits(data);
+  renderPL(data);
+  renderCategories(data);
+}
+
+function sumByCategory(data, category) {
+  return data
+    .filter(r => r.category === category && r.finance_category !== 'Not Considered')
+    .reduce((s, r) => s + Math.abs(parseFloat(r.eur_amount) || 0), 0);
+}
+
+function sumByPLLayer(data, layer) {
+  return data
+    .filter(r => r.finance_category === layer)
+    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+}
+
+function renderHero(data) {
+  // True Cash Flow = income - all real expenses (exclude Finance/Not Considered)
+  const income = data
+    .filter(r => r.category === 'Income' || (parseFloat(r.eur_amount) > 0 && r.finance_category === '1. Earnings Net'))
+    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+
+  const expenses = data
+    .filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0)
+    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+
+  // Better: use 5. True Cash Flow net
+  const tcfRows = data.filter(r => r.finance_category === '5. True Cash Flow');
+  const tcf = tcfRows.reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+
+  // Fall back to income - expenses if no TCF rows
+  const display = tcfRows.length > 0 ? tcf : (income + expenses);
+
+  const el = document.getElementById('heroAmount');
+  const noteEl = document.getElementById('heroNote');
+  el.textContent = `€${Math.round(display).toLocaleString('de-DE')}`;
+  el.className = `hero-amount ${display >= 0 ? 'positive' : 'negative'}`;
+  noteEl.textContent = display >= 0 ? 'para lo que quieran 🎉' : 'mes ajustado 😅';
+}
+
+function renderLifeUnits(data) {
+  // True Cash Flow amount for the units calculation
+  const tcf = data
+    .filter(r => r.finance_category !== 'Not Considered')
+    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+
+  const remaining = Math.max(0, tcf);
+
+  const grid = document.getElementById('lifeUnitsGrid');
+  grid.innerHTML = LIFE_UNITS.map(u => {
+    const spent = sumByCategory(data, u.key);
+    const units = Math.floor(remaining / u.avgEur);
+    const colorClass = units > 5 ? 'ok' : units > 2 ? 'warn' : 'bad';
+    return `
+      <div class="unit-card">
+        <span class="unit-emoji">${u.emoji}</span>
+        <div class="unit-count ${colorClass}">${units}</div>
+        <div class="unit-label">${u.label}</div>
+        <div class="unit-detail">gastado: €${Math.round(spent)}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderPL(data) {
+  const stack = document.getElementById('plStack');
+
+  // Calculate each layer net
+  const layers = [
+    { label: 'Ingresos',        amount: data.filter(r => parseFloat(r.eur_amount) > 0 && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#3a7a5a' },
+    { label: 'Renta',           amount: data.filter(r => r.category === 'Rent').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#c94040' },
+    { label: 'Gastos vitales',  amount: data.filter(r => ['Groceries','Health','Transport','Network','Housing','Non Food Groceries','Hair','Parking'].includes(r.category) && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#b07020' },
+    { label: 'Calidad de vida', amount: data.filter(r => ['Food','Subscription','Services'].includes(r.category) && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#5b8cbf' },
+    { label: 'Extras & viajes', amount: data.filter(r => ['Clothing','Trip','Tech','Other','Delivery','Pet','Christmas Deco'].includes(r.category) && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#1a1612' },
+  ];
+
+  stack.innerHTML = layers.map(l => `
+    <div class="pl-row">
+      <div class="pl-left">
+        <div class="pl-dot" style="background:${l.dot}"></div>
+        <div>
+          <div class="pl-name">${l.label}</div>
+        </div>
+      </div>
+      <div class="pl-amount ${l.amount >= 0 ? 'pos' : 'neg'}">
+        ${l.amount >= 0 ? '+' : ''}€${Math.round(l.amount).toLocaleString('de-DE')}
+      </div>
+    </div>`).join('');
+}
+
+function renderCategories(data) {
+  const cats = {};
+  data.forEach(r => {
+    if (!r.category || r.finance_category === 'Not Considered') return;
+    const eur = parseFloat(r.eur_amount) || 0;
+    if (eur >= 0) return; // only expenses
+    if (!cats[r.category]) cats[r.category] = 0;
+    cats[r.category] += Math.abs(eur);
+  });
+
+  const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  const max = sorted[0]?.[1] || 1;
+
+  const catColors = {
+    Rent: '#c94040', Groceries: '#3a7a5a', Food: '#b07020',
+    Transport: '#5b8cbf', Health: '#7b5cbf', Clothing: '#bf5b8c',
+    Trip: '#5bbfb0', Subscription: '#8cbf5b', Tech: '#5b8cbf',
+    Delivery: '#e08050', Other: '#b0aca7',
+  };
+
+  document.getElementById('catList').innerHTML = sorted.map(([cat, eur]) => {
+    const pct = (eur / max) * 100;
+    const color = catColors[cat] || '#b0aca7';
+    return `
+      <div class="cat-row">
+        <div class="cat-bar-wrap">
+          <div class="cat-name-row">
+            <span class="cat-name">${cat}</span>
+            <span class="cat-eur">€${Math.round(eur).toLocaleString('de-DE')}</span>
+          </div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar-fill" style="width:${pct}%;background:${color}"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
