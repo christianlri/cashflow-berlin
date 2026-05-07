@@ -169,7 +169,7 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const RECEIPTS_API  = '/api/receipts';
-const CATEGORIES    = ['Frutas y verduras','Lácteos','Carnes','Bebidas','Snacks','Cuidado Personal','Household','Non Food','BWS','Congelados','Panadería','Otros'];
+const CATEGORIES    = ['Frutas y verduras','Lácteos','Carnes','Bebidas','Snacks','Limpieza','Congelados','Panadería','Otros'];
 
 let parsedItems   = [];
 let receiptMeta   = {};
@@ -316,6 +316,14 @@ async function loadToDb() {
       const msg = document.getElementById('resultMsg');
       msg.style.display = 'block';
       msg.textContent   = `✓ ${data.inserted} ítems cargados a BigQuery`;
+      document.getElementById('bottomBar').style.display = 'none';
+    } else if (res.status === 409) {
+      const msg = document.getElementById('resultMsg');
+      msg.style.display = 'block';
+      msg.style.background = 'var(--amber-soft)';
+      msg.style.borderColor = 'var(--amber)';
+      msg.style.color = 'var(--amber)';
+      msg.textContent = `⚠️ Este ticket ya fue cargado anteriormente`;
       document.getElementById('bottomBar').style.display = 'none';
     } else throw new Error(data.error || 'Error desconocido');
   } catch (e) {
