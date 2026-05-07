@@ -259,43 +259,52 @@
     .cat-row {
       background: var(--card);
       border-radius: 12px;
-      padding: 12px 14px;
       border: 1px solid var(--border);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .cat-row:hover { border-color: var(--ink-muted); }
+    .cat-row.open { border-color: var(--ink); }
+    .cat-row-header {
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    .cat-bar-wrap {
-      flex: 1;
-    }
+    .cat-bar-wrap { flex: 1; }
     .cat-name-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       margin-bottom: 5px;
     }
-    .cat-name {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--ink);
+    .cat-name { font-size: 12px; font-weight: 500; color: var(--ink); }
+    .cat-eur  { font-size: 12px; font-weight: 500; color: var(--ink); }
+    .cat-bar-bg { background: var(--border); border-radius: 4px; height: 4px; overflow: hidden; }
+    .cat-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .cat-chevron { font-size: 10px; color: var(--ink-muted); transition: transform 0.2s; flex-shrink: 0; }
+    .cat-row.open .cat-chevron { transform: rotate(180deg); }
+
+    /* ── TX DETAIL LIST ── */
+    .cat-detail {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 8px 0;
     }
-    .cat-eur {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--ink);
+    .cat-row.open .cat-detail { display: block; }
+    .cat-tx {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 14px;
+      gap: 8px;
     }
-    .cat-bar-bg {
-      background: var(--border);
-      border-radius: 4px;
-      height: 4px;
-      overflow: hidden;
-    }
-    .cat-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: var(--accent);
-      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+    .cat-tx:hover { background: var(--bg); }
+    .cat-tx-left { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .cat-tx-vendor { font-size: 12px; font-weight: 400; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .cat-tx-date { font-size: 10px; color: var(--ink-muted); }
+    .cat-tx-amount { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
 
     /* ── MONTH SELECTOR ── */
     .month-tabs {
@@ -627,42 +636,63 @@ function renderCategories(data) {
     Housing: '#a07040', 'Non Food Groceries': '#60a070', Hair: '#c090b0',
   };
 
-  const cats = {};
+  // Build transactions per category
+  const catTxs = {};
+  const cats   = {};
   data.forEach(r => {
     if (!r.category || r.finance_category === 'Not Considered') return;
     const eur = parseFloat(r.eur_amount) || 0;
     if (eur >= 0) return;
-    if (!cats[r.category]) cats[r.category] = 0;
+    if (!cats[r.category])   cats[r.category]   = 0;
+    if (!catTxs[r.category]) catTxs[r.category] = [];
     cats[r.category] += Math.abs(eur);
+    catTxs[r.category].push({ date: r.date?.value || r.date, commerce: r.commerce, eur });
   });
 
   const allCats = new Set([...Object.keys(cats), ...Object.keys(CATEGORY_TARGETS).filter(c => c !== 'Rent')]);
   const rows = Array.from(allCats)
-    .map(c => ({ cat: c, spent: cats[c] || 0, target: Math.abs(CATEGORY_TARGETS[c] || 0) }))
+    .map(c => ({ cat: c, spent: cats[c] || 0, target: Math.abs(CATEGORY_TARGETS[c] || 0), txs: catTxs[c] || [] }))
     .filter(r => r.target > 0 || r.spent > 0)
     .sort((a, b) => b.spent - a.spent);
 
   document.getElementById('catList').innerHTML = rows.map(r => {
-    const pct = r.target > 0 ? Math.min(100, (r.spent / r.target) * 100) : 100;
-    const over = r.spent > r.target && r.target > 0;
-    const color = catColors[r.cat] || '#b0aca7';
+    const pct       = r.target > 0 ? Math.min(100, (r.spent / r.target) * 100) : 100;
+    const over      = r.spent > r.target && r.target > 0;
+    const color     = catColors[r.cat] || '#b0aca7';
     const remaining = r.target - r.spent;
-    return `
-      <div class="cat-row">
-        <div class="cat-bar-wrap">
-          <div class="cat-name-row">
-            <span class="cat-name">${r.cat}</span>
-            <span class="cat-eur" style="color:${over ? '#c94040' : '#1a1612'}">
-              €${Math.round(r.spent)} <span style="font-size:10px;color:#b0aca7">/ €${r.target}</span>${over ? ' ⚠️' : ''}
-            </span>
-          </div>
-          <div class="cat-bar-bg">
-            <div class="cat-bar-fill" style="width:${pct}%;background:${over ? '#c94040' : color}"></div>
-          </div>
-          ${r.target > 0 ? `<div style="font-size:10px;color:${remaining >= 0 ? '#3a7a5a' : '#c94040'};margin-top:3px">
-            ${remaining >= 0 ? `€${Math.round(remaining)} restantes` : `€${Math.abs(Math.round(remaining))} sobre el límite`}
-          </div>` : ''}
+
+    // Sort txs by date desc
+    const txsSorted = [...r.txs].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const txHtml = txsSorted.length > 0 ? txsSorted.map(tx => `
+      <div class="cat-tx">
+        <div class="cat-tx-left">
+          <div class="cat-tx-vendor">${tx.commerce || '—'}</div>
+          <div class="cat-tx-date">${tx.date || ''}</div>
         </div>
+        <div class="cat-tx-amount">−€${Math.abs(tx.eur).toFixed(2)}</div>
+      </div>`).join('') : `<div class="cat-tx"><div class="cat-tx-date" style="padding:4px 0">Sin transacciones</div></div>`;
+
+    return `
+      <div class="cat-row" onclick="this.classList.toggle('open')">
+        <div class="cat-row-header">
+          <div class="cat-bar-wrap">
+            <div class="cat-name-row">
+              <span class="cat-name">${r.cat}</span>
+              <span class="cat-eur" style="color:${over ? '#c94040' : '#1a1612'}">
+                €${Math.round(r.spent)} <span style="font-size:10px;color:#b0aca7">/ €${r.target}</span>${over ? ' ⚠️' : ''}
+              </span>
+            </div>
+            <div class="cat-bar-bg">
+              <div class="cat-bar-fill" style="width:${pct}%;background:${over ? '#c94040' : color}"></div>
+            </div>
+            ${r.target > 0 ? `<div style="font-size:10px;color:${remaining >= 0 ? '#3a7a5a' : '#c94040'};margin-top:3px">
+              ${remaining >= 0 ? `€${Math.round(remaining)} restantes` : `€${Math.abs(Math.round(remaining))} sobre el límite`}
+            </div>` : ''}
+          </div>
+          <div class="cat-chevron">▼</div>
+        </div>
+        <div class="cat-detail">${txHtml}</div>
       </div>`;
   }).join('');
 }
