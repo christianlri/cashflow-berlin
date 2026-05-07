@@ -3,6 +3,13 @@
     "api/transactions.js": {
       "memory": 512,
       "maxDuration": 10
+    },
+    "api/classify.js": {
+      "memory": 512,
+      "maxDuration": 30
     }
-  }
+  },
+  "routes": [
+    { "src": "/clasificar", "dest": "/clasificar.html" }
+  ]
 }
