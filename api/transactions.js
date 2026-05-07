@@ -10,15 +10,24 @@ export default async function handler(req, res) {
   
   const query = `
     SELECT 
-      Fecha,
-      CARD,
-      Categoría,
-      Comercio,
+      date,
+      card,
+      category,
+      subcategory,
+      city,
+      commerce,
+      original_amount,
+      currency_original_amount,
+      pen_amount,
+      usd_amount,
       eur_amount,
-      month
-    FROM \`${process.env.BQ_DATASET}.transactions\`
-    WHERE month = FORMAT_DATE('%m/%Y', DATE_SUB(CURRENT_DATE(), INTERVAL 0 MONTH))
-    ORDER BY Fecha DESC
+      month,
+      week,
+      finance_class,
+      finance_category
+    FROM \`spark-datahub.cashflow.data_bank\`
+    WHERE DATE_TRUNC(date, MONTH) = DATE_TRUNC(CURRENT_DATE(), MONTH)
+    ORDER BY date DESC
   `;
 
   try {
