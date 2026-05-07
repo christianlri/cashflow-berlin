@@ -11,9 +11,20 @@
     "api/summary.js": {
       "memory": 256,
       "maxDuration": 15
+    },
+    "api/receipts.js": {
+      "memory": 512,
+      "maxDuration": 30
     }
   },
   "routes": [
-    { "src": "/clasificar", "dest": "/clasificar.html" }
+    {
+      "src": "/clasificar",
+      "dest": "/clasificar.html"
+    },
+    {
+      "src": "/despensa",
+      "dest": "/despensa.html"
+    }
   ]
 }
