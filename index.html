@@ -500,36 +500,24 @@ function sumByPLLayer(data, layer) {
 }
 
 function renderHero(data) {
-  // True Cash Flow = income - all real expenses (exclude Finance/Not Considered)
-  const income = data
-    .filter(r => r.category === 'Income' || (parseFloat(r.eur_amount) > 0 && r.finance_category === '1. Earnings Net'))
-    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
-
-  const expenses = data
-    .filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0)
-    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
-
-  // Better: use 5. True Cash Flow net
-  const tcfRows = data.filter(r => r.finance_category === '5. True Cash Flow');
-  const tcf = tcfRows.reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
-
-  // Fall back to income - expenses if no TCF rows
-  const display = tcfRows.length > 0 ? tcf : (income + expenses);
-
-  const el = document.getElementById('heroAmount');
-  const noteEl = document.getElementById('heroNote');
-  el.textContent = `€${Math.round(display).toLocaleString('de-DE')}`;
-  el.className = `hero-amount ${display >= 0 ? 'positive' : 'negative'}`;
-  noteEl.textContent = display >= 0 ? 'para lo que quieran 🎉' : 'mes ajustado 😅';
-}
-
-function renderLifeUnits(data) {
-  // True Cash Flow amount for the units calculation
-  const tcf = data
+  // Grand Total = SUM of all rows excluding Not Considered
+  const grandTotal = data
     .filter(r => r.finance_category !== 'Not Considered')
     .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
 
-  const remaining = Math.max(0, tcf);
+  const el = document.getElementById('heroAmount');
+  const noteEl = document.getElementById('heroNote');
+  el.textContent = `€${Math.round(grandTotal).toLocaleString('de-DE')}`;
+  el.className = `hero-amount ${grandTotal >= 0 ? 'positive' : 'negative'}`;
+  noteEl.textContent = grandTotal >= 0 ? 'para lo que quieran 🎉' : 'mes ajustado 😅';
+}
+
+function renderLifeUnits(data) {
+  const grandTotal = data
+    .filter(r => r.finance_category !== 'Not Considered')
+    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+
+  const remaining = Math.max(0, grandTotal);
 
   const grid = document.getElementById('lifeUnitsGrid');
   grid.innerHTML = LIFE_UNITS.map(u => {
@@ -549,27 +537,48 @@ function renderLifeUnits(data) {
 function renderPL(data) {
   const stack = document.getElementById('plStack');
 
-  // Calculate each layer net
-  const layers = [
-    { label: 'Ingresos',        amount: data.filter(r => parseFloat(r.eur_amount) > 0 && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#3a7a5a' },
-    { label: 'Renta',           amount: data.filter(r => r.category === 'Rent').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#c94040' },
-    { label: 'Gastos vitales',  amount: data.filter(r => ['Groceries','Health','Transport','Network','Housing','Non Food Groceries','Hair','Parking'].includes(r.category) && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#b07020' },
-    { label: 'Calidad de vida', amount: data.filter(r => ['Food','Subscription','Services'].includes(r.category) && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#5b8cbf' },
-    { label: 'Extras & viajes', amount: data.filter(r => ['Clothing','Trip','Tech','Other','Delivery','Pet','Christmas Deco'].includes(r.category) && r.finance_category !== 'Not Considered').reduce((s,r) => s + (parseFloat(r.eur_amount)||0), 0), dot: '#1a1612' },
+  // Use finance_category as source of truth — matches spreadsheet exactly
+  const PL_DEFS = [
+    { fc: '1. Earnings Net',           label: 'Ingresos',        dot: '#3a7a5a' },
+    { fc: '2. Foundational Margin',    label: 'Renta & Network', dot: '#c94040' },
+    { fc: '3. Vital Surplus',          label: 'Gastos vitales',  dot: '#b07020' },
+    { fc: '4. Quality of Life Margin', label: 'Calidad de vida', dot: '#5b8cbf' },
+    { fc: '5. True Cash Flow',         label: 'Extras & viajes', dot: '#1a1612' },
   ];
 
-  stack.innerHTML = layers.map(l => `
-    <div class="pl-row">
-      <div class="pl-left">
-        <div class="pl-dot" style="background:${l.dot}"></div>
-        <div>
-          <div class="pl-name">${l.label}</div>
+  const layers = PL_DEFS.map(def => {
+    const amount = data
+      .filter(r => r.finance_category === def.fc)
+      .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+    return { ...def, amount };
+  });
+
+  // Grand total
+  const grandTotal = data
+    .filter(r => r.finance_category !== 'Not Considered')
+    .reduce((s, r) => s + (parseFloat(r.eur_amount) || 0), 0);
+
+  stack.innerHTML = [
+    ...layers.map(l => `
+      <div class="pl-row">
+        <div class="pl-left">
+          <div class="pl-dot" style="background:${l.dot}"></div>
+          <div><div class="pl-name">${l.label}</div></div>
         </div>
+        <div class="pl-amount ${l.amount >= 0 ? 'pos' : 'neg'}">
+          ${l.amount >= 0 ? '+' : ''}€${Math.round(l.amount).toLocaleString('de-DE')}
+        </div>
+      </div>`),
+    `<div class="pl-row" style="border-color:#1a1612;background:#1a1612">
+      <div class="pl-left">
+        <div class="pl-dot" style="background:#fff"></div>
+        <div><div class="pl-name" style="color:#fff;font-weight:600">Total del mes</div></div>
       </div>
-      <div class="pl-amount ${l.amount >= 0 ? 'pos' : 'neg'}">
-        ${l.amount >= 0 ? '+' : ''}€${Math.round(l.amount).toLocaleString('de-DE')}
+      <div class="pl-amount ${grandTotal >= 0 ? 'pos' : 'neg'}" style="font-size:20px">
+        ${grandTotal >= 0 ? '+' : ''}€${Math.round(grandTotal).toLocaleString('de-DE')}
       </div>
-    </div>`).join('');
+    </div>`
+  ].join('');
 }
 
 function renderCategories(data) {
