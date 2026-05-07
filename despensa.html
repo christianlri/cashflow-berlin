@@ -134,7 +134,7 @@
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()">
       <div class="upload-icon">🧾</div>
       <div class="upload-title">Arrastra el PDF del ticket o click para seleccionar</div>
-      <div class="upload-sub">REWE eBon · PDF</div>
+      <div class="upload-sub">REWE · Kaufland · Lidl · Aldi · Edeka · PDF</div>
       <input type="file" id="pdfInput" accept=".pdf" />
     </div>
 
@@ -214,7 +214,7 @@ async function handlePDF(file) {
     const addressMatch = fullText.match(/([A-Za-zÄÖÜäöüß\-\s]+\d+[\/\s]*[A-Za-z\s]*\d{5}\s*Berlin)/i);
 
     receiptMeta = {
-      store:        storeMatch?.[0] || 'REWE',
+      store:        storeMatch?.[0] || 'Supermercado',
       storeAddress: addressMatch?.[0]?.trim() || null,
       date:         dateMatch ? parseGermanDate(dateMatch[1]) : new Date().toISOString().slice(0,10),
       time:         timeMatch?.[0] || '',
