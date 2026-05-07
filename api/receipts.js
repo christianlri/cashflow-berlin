@@ -49,6 +49,16 @@ export default async function handler(req, res) {
     // ── DIRECT INSERT (pre-reviewed items from frontend) ─────────────────
     if (receiptText === '__skip_parse__' && preItems?.length) {
       try {
+        // Check for duplicate receipt_id
+        const [existing] = await bigquery.query({
+          query: `SELECT COUNT(*) as cnt FROM \`spark-datahub.cashflow.receipt_items\` WHERE receipt_id = @receiptId`,
+          params: { receiptId },
+          location: 'US',
+        });
+        if (existing[0]?.cnt > 0) {
+          return res.status(409).json({ error: `Este ticket ya fue cargado (${receiptId})` });
+        }
+
         const rows = preItems.map(item => ({
           date,
           store:              store || 'REWE',
