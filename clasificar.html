@@ -470,9 +470,8 @@ function renderRows() {
     if (currentFilter === 'skipped') return rowStates[i] === 'skipped' ? i : null;
     return i;
   }).filter(i => i !== null);
-    const state = rowStates[i];
-    const mapping = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered', finance_class: 'Not Considered' };
-    const selectClass = r.source === 'historical' ? 'historical' : r.source === 'inferred' ? 'inferred' : 'manual';
+
+  if (visibleIndices.length === 0) {
 
   if (visibleIndices.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink-muted);font-size:13px">
