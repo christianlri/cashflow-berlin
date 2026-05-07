@@ -316,13 +316,36 @@ function inferCategory(vendor) {
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-  return lines.slice(1).map(line => {
-    const vals = line.match(/(".*?"|[^,]+|(?<=,)(?=,))/g) || [];
-    const row = {};
-    headers.forEach((h, i) => { row[h] = (vals[i] || '').replace(/"/g, '').trim(); });
-    return row;
-  }).filter(r => r['Booking Date'] && r['Partner Name']);
+
+  function parseLine(line) {
+    const result = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) {
+        result.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  const headers = parseLine(lines[0]);
+  return lines.slice(1)
+    .filter(l => l.trim())
+    .map(line => {
+      const vals = parseLine(line);
+      const row = {};
+      headers.forEach((h, i) => { row[h] = (vals[i] || '').trim(); });
+      return row;
+    })
+    .filter(r => r['Booking Date'] && r['Partner Name']);
 }
 
 function mapCard(accountName) {
