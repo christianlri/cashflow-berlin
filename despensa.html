@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palette · Despensa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --white: #ffffff; --bg: #f5f5f7; --ink: #0a0a0f;
+      --ink-soft: #4a4a5a; --ink-muted: #9a9aaa; --border: #e8e8f0;
+      --blue: #2E428B; --violet: #7377EC; --magenta: #B6346B;
+      --grad: linear-gradient(135deg, #2E428B 0%, #7377EC 50%, #B6346B 100%);
+      --green: #00875a; --green-soft: #e6f6f1;
+      --red: #c0392b; --red-soft: #fdecea;
+      --amber: #b45309; --amber-soft: #fef3c7;
+      --radius: 14px; --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+    .header-inner { max-width: 680px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .logo-mark { width: 26px; height: 26px; background: var(--grad); border-radius: 7px; }
+    .logo-name { font-size: 16px; font-weight: 700; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-page { font-size: 13px; font-weight: 500; color: var(--ink-muted); }
+
+    main { padding: 20px 16px 60px; max-width: 680px; margin: 0 auto; }
+    .section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); margin: 20px 0 10px; }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+    .tab { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; font-family: 'Outfit', sans-serif; transition: all 0.15s; }
+    .tab.active { background: var(--grad); border-color: transparent; color: white; }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone { background: var(--white); border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--violet); background: rgba(115,119,236,0.04); }
+    .upload-icon { font-size: 36px; margin-bottom: 12px; }
+    .upload-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .upload-sub { font-size: 12px; color: var(--ink-muted); }
+    #pdfInput { display: none; }
+
+    /* ── RECEIPT PREVIEW ── */
+    .receipt-meta { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; display: flex; gap: 20px; flex-wrap: wrap; }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-label { font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .meta-value { font-size: 13px; font-weight: 600; color: var(--ink); }
+
+    /* ── ITEMS TABLE ── */
+    .items-list { display: flex; flex-direction: column; gap: 6px; }
+    .item-row { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 11px 14px; display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; }
+    .item-row.approved { border-color: var(--green); }
+    .item-names { min-width: 0; }
+    .item-raw { font-size: 10px; color: var(--ink-muted); font-weight: 500; font-family: monospace; }
+    .item-friendly { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .item-cat { font-size: 10px; color: var(--ink-muted); }
+    .item-qty-price { text-align: right; white-space: nowrap; }
+    .item-price { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .item-unit  { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+    .item-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .cat-select-small { font-size: 10px; font-weight: 600; border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; background: var(--bg); color: var(--ink); cursor: pointer; font-family: 'Outfit', sans-serif; }
+
+    /* ── PRICE HISTORY ── */
+    .pantry-grid { display: flex; flex-direction: column; gap: 6px; }
+    .pantry-item { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; }
+    .pantry-item.open { border-color: var(--blue); }
+    .pantry-header { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .pantry-left { flex: 1; min-width: 0; }
+    .pantry-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .pantry-raw  { font-size: 10px; color: var(--ink-muted); font-family: monospace; margin-top: 1px; }
+    .pantry-right { text-align: right; flex-shrink: 0; }
+    .pantry-price { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .pantry-range { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+    .pantry-volatility { display: inline-block; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 700; margin-top: 4px; }
+    .vol-low  { background: var(--green-soft); color: var(--green); }
+    .vol-mid  { background: var(--amber-soft); color: var(--amber); }
+    .vol-high { background: var(--red-soft);   color: var(--red);   }
+    .pantry-chevron { font-size: 9px; color: var(--ink-muted); transition: transform 0.2s; flex-shrink: 0; }
+    .pantry-item.open .pantry-chevron { transform: rotate(180deg); }
+
+    .price-history { display: none; border-top: 1px solid var(--border); padding: 8px 0; }
+    .pantry-item.open .price-history { display: block; }
+    .price-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px; }
+    .price-row:hover { background: var(--bg); }
+    .price-date  { font-size: 11px; color: var(--ink-soft); }
+    .price-store { font-size: 10px; color: var(--ink-muted); }
+    .price-val   { font-size: 12px; font-weight: 700; color: var(--ink); }
+    .price-delta { font-size: 10px; font-weight: 600; margin-left: 6px; }
+    .price-delta.up   { color: var(--red); }
+    .price-delta.down { color: var(--green); }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar { position: sticky; bottom: 0; background: var(--ink); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .bottom-info { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 400; }
+    .bottom-info strong { color: white; font-weight: 600; }
+    .btn { padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'Outfit', sans-serif; }
+    .btn-primary { background: var(--grad); color: white; }
+    .btn-ghost   { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+
+    #resultMsg { background: var(--green-soft); border: 1.5px solid var(--green); border-radius: var(--radius); padding: 16px; text-align: center; font-size: 14px; font-weight: 600; color: var(--green); display: none; margin-top: 16px; }
+
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    .spinner-dark { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--violet); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { opacity: 0; animation: fadeUp 0.3s ease forwards; }
+    @keyframes fadeUp { to { opacity: 1; } }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-muted); font-size: 13px; }
+    .loading-block { text-align: center; padding: 40px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark"></div>
+      <div class="logo-name">Palette</div>
+    </a>
+    <div class="header-page">Despensa</div>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('upload')">Subir ticket</div>
+    <div class="tab" onclick="showTab('pantry')">Historial de precios</div>
+  </div>
+
+  <!-- ── UPLOAD TAB ── -->
+  <div id="uploadTab">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()">
+      <div class="upload-icon">🧾</div>
+      <div class="upload-title">Arrastra el PDF del ticket o click para seleccionar</div>
+      <div class="upload-sub">REWE eBon · PDF</div>
+      <input type="file" id="pdfInput" accept=".pdf" />
+    </div>
+
+    <div id="receiptSection" style="display:none">
+      <div class="section-label">Ticket detectado</div>
+      <div class="receipt-meta" id="receiptMeta"></div>
+
+      <div class="section-label">Ítems — revisa antes de cargar</div>
+      <div class="items-list" id="itemsList"></div>
+      <div id="resultMsg"></div>
+    </div>
+  </div>
+
+  <!-- ── PANTRY TAB ── -->
+  <div id="pantryTab" style="display:none">
+    <div class="loading-block" id="pantryLoading">
+      <div class="spinner-dark"></div>
+      <div style="font-size:13px;color:var(--ink-muted)">Cargando historial...</div>
+    </div>
+    <div class="pantry-grid" id="pantryGrid" style="display:none"></div>
+  </div>
+</main>
+
+<div class="bottom-bar" id="bottomBar" style="display:none">
+  <div class="bottom-info">
+    <strong id="itemCount">0</strong> ítems listos para cargar
+  </div>
+  <button class="btn btn-primary" id="loadBtn" onclick="loadToDb()">Cargar a BigQuery</button>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const RECEIPTS_API  = '/api/receipts';
+const CATEGORIES    = ['Frutas y verduras','Lácteos','Carnes','Bebidas','Snacks','Limpieza','Congelados','Panadería','Otros'];
+
+let parsedItems   = [];
+let receiptMeta   = {};
+let currentTab    = 'upload';
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  currentTab = tab;
+  document.getElementById('uploadTab').style.display  = tab === 'upload'  ? 'block' : 'none';
+  document.getElementById('pantryTab').style.display  = tab === 'pantry'  ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['upload','pantry'][i] === tab));
+  if (tab === 'pantry') loadPantry();
+}
+
+// ── PDF EXTRACTION ────────────────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+const pdfInput   = document.getElementById('pdfInput');
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop',      e  => { e.preventDefault(); uploadZone.classList.remove('drag'); handlePDF(e.dataTransfer.files[0]); });
+pdfInput.addEventListener('change',      e  => handlePDF(e.target.files[0]));
+
+async function handlePDF(file) {
+  if (!file) return;
+  uploadZone.innerHTML = `<div class="spinner-dark"></div><div style="font-size:13px;color:var(--ink-muted)">Extrayendo texto...</div>`;
+
+  try {
+    // Extract text from PDF using pdf.js (runs in browser, no tokens used)
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf         = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText      = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page    = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map(s => s.str).join(' ') + '\n';
+    }
+
+    // Parse store info from text
+    const dateMatch    = fullText.match(/(\d{2}\.\d{2}\.\d{4})/);
+    const timeMatch    = fullText.match(/(\d{2}:\d{2})/);
+    const storeMatch   = fullText.match(/REWE|Kaufland|Lidl|Aldi|Edeka/i);
+    const addressMatch = fullText.match(/([A-Za-zÄÖÜäöüß\-\s]+\d+[\/\s]*[A-Za-z\s]*\d{5}\s*Berlin)/i);
+
+    receiptMeta = {
+      store:        storeMatch?.[0] || 'REWE',
+      storeAddress: addressMatch?.[0]?.trim() || null,
+      date:         dateMatch ? parseGermanDate(dateMatch[1]) : new Date().toISOString().slice(0,10),
+      time:         timeMatch?.[0] || '',
+      receiptId:    `${dateMatch?.[1] || 'unknown'}_${timeMatch?.[0]?.replace(':','') || Date.now()}`,
+    };
+
+    // Send text to Claude for parsing
+    uploadZone.innerHTML = `<div class="spinner-dark"></div><div style="font-size:13px;color:var(--ink-muted)">Claude está leyendo el ticket...</div>`;
+
+    const res  = await fetch(RECEIPTS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        receiptText:  fullText,
+        store:        receiptMeta.store,
+        storeAddress: receiptMeta.storeAddress,
+        receiptId:    receiptMeta.receiptId,
+        date:         receiptMeta.date,
+        dryRun:       true, // parse only, don't insert yet
+      }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    parsedItems = data.items || [];
+
+    uploadZone.style.display = 'none';
+    document.getElementById('receiptSection').style.display = 'block';
+    document.getElementById('bottomBar').style.display = 'flex';
+
+    renderReceiptMeta();
+    renderItems();
+  } catch (e) {
+    uploadZone.innerHTML = `<div class="upload-icon">😬</div><div class="upload-title">Error procesando el PDF</div><div class="upload-sub">${e.message}</div>`;
+  }
+}
+
+function parseGermanDate(str) {
+  const [d, m, y] = str.split('.');
+  return `${y}-${m}-${d}`;
+}
+
+function renderReceiptMeta() {
+  document.getElementById('receiptMeta').innerHTML = `
+    <div class="meta-item"><div class="meta-label">Tienda</div><div class="meta-value">${receiptMeta.store}</div></div>
+    <div class="meta-item"><div class="meta-label">Fecha</div><div class="meta-value">${receiptMeta.date}</div></div>
+    ${receiptMeta.time ? `<div class="meta-item"><div class="meta-label">Hora</div><div class="meta-value">${receiptMeta.time}</div></div>` : ''}
+    <div class="meta-item"><div class="meta-label">Ítems</div><div class="meta-value">${parsedItems.length}</div></div>
+    <div class="meta-item"><div class="meta-label">Total</div><div class="meta-value">€${parsedItems.reduce((s,i) => s + (i.total_price||0), 0).toFixed(2)}</div></div>
+  `;
+}
+
+function renderItems() {
+  document.getElementById('itemCount').textContent = parsedItems.length;
+  document.getElementById('itemsList').innerHTML = parsedItems.map((item, i) => `
+    <div class="item-row approved fade-in">
+      <div class="item-names">
+        <div class="item-friendly">${item.item_friendly_name}</div>
+        <div class="item-raw">${item.item_raw_name}</div>
+        <div class="item-cat">${item.category}</div>
+      </div>
+      <div class="item-qty-price">
+        <div class="item-price">€${parseFloat(item.total_price).toFixed(2)}</div>
+        <div class="item-unit">${item.qty > 1 ? `${item.qty} × €${parseFloat(item.unit_price).toFixed(2)}` : `€${parseFloat(item.unit_price).toFixed(2)} c/u`}</div>
+      </div>
+      <div class="item-actions">
+        <select class="cat-select-small" onchange="changeCategory(${i}, this.value)">
+          ${CATEGORIES.map(c => `<option value="${c}"${c === item.category ? ' selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>`).join('');
+}
+
+function changeCategory(i, cat) {
+  parsedItems[i].category = cat;
+}
+
+// ── LOAD TO BQ ────────────────────────────────────────────────────────────────
+async function loadToDb() {
+  const btn = document.getElementById('loadBtn');
+  btn.innerHTML = '<span class="spinner"></span> Cargando...';
+  btn.disabled  = true;
+
+  try {
+    const res  = await fetch(RECEIPTS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        receiptText:  '__skip_parse__',
+        preItems:     parsedItems,
+        store:        receiptMeta.store,
+        storeAddress: receiptMeta.storeAddress,
+        receiptId:    receiptMeta.receiptId,
+        date:         receiptMeta.date,
+      }),
+    });
+    const data = await res.json();
+    if (data.inserted) {
+      const msg = document.getElementById('resultMsg');
+      msg.style.display = 'block';
+      msg.textContent   = `✓ ${data.inserted} ítems cargados a BigQuery`;
+      document.getElementById('bottomBar').style.display = 'none';
+    } else throw new Error(data.error || 'Error desconocido');
+  } catch (e) {
+    btn.innerHTML = '⚠️ Error — reintentar';
+    btn.disabled  = false;
+    alert('Error: ' + e.message);
+  }
+}
+
+// ── PANTRY / PRICE HISTORY ────────────────────────────────────────────────────
+async function loadPantry() {
+  document.getElementById('pantryLoading').style.display = 'block';
+  document.getElementById('pantryGrid').style.display    = 'none';
+
+  try {
+    const res  = await fetch(RECEIPTS_API);
+    const data = await res.json();
+
+    document.getElementById('pantryLoading').style.display = 'none';
+
+    if (!data.length) {
+      document.getElementById('pantryGrid').style.display = 'block';
+      document.getElementById('pantryGrid').innerHTML = `<div class="empty-state">Aún no hay tickets cargados</div>`;
+      return;
+    }
+
+    document.getElementById('pantryGrid').style.display = 'block';
+    document.getElementById('pantryGrid').innerHTML = data.map(item => {
+      const volatility = item.max_price - item.min_price;
+      const volPct     = item.avg_price > 0 ? (volatility / item.avg_price) * 100 : 0;
+      const volClass   = volPct < 5 ? 'vol-low' : volPct < 15 ? 'vol-mid' : 'vol-high';
+      const volLabel   = volPct < 5 ? 'Precio estable' : volPct < 15 ? 'Varía un poco' : 'Precio volátil';
+
+      return `
+        <div class="pantry-item" onclick="this.classList.toggle('open'); loadItemHistory('${item.item_raw_name}', this)">
+          <div class="pantry-header">
+            <div class="pantry-left">
+              <div class="pantry-name">${item.item_friendly_name || item.item_raw_name}</div>
+              <div class="pantry-raw">${item.item_raw_name}</div>
+              <span class="pantry-volatility ${volClass}">${volLabel}</span>
+            </div>
+            <div class="pantry-right">
+              <div class="pantry-price">€${parseFloat(item.avg_price).toFixed(2)}</div>
+              <div class="pantry-range">€${parseFloat(item.min_price).toFixed(2)} – €${parseFloat(item.max_price).toFixed(2)}</div>
+              <div style="font-size:10px;color:var(--ink-muted);margin-top:2px">${item.times_bought}× comprado</div>
+            </div>
+            <div class="pantry-chevron">▼</div>
+          </div>
+          <div class="price-history" id="hist-${item.item_raw_name.replace(/[^a-z0-9]/gi,'-')}">
+            <div style="padding:12px;text-align:center;color:var(--ink-muted);font-size:12px">Cargando...</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('pantryLoading').innerHTML = `<div class="empty-state">Error cargando: ${e.message}</div>`;
+  }
+}
+
+const historyCache = {};
+
+async function loadItemHistory(rawName, el) {
+  const histId = `hist-${rawName.replace(/[^a-z0-9]/gi,'-')}`;
+  const histEl = document.getElementById(histId);
+  if (!histEl || !el.classList.contains('open')) return;
+  if (historyCache[rawName]) { histEl.innerHTML = historyCache[rawName]; return; }
+
+  try {
+    const res  = await fetch(`${RECEIPTS_API}?item=${encodeURIComponent(rawName)}`);
+    const rows = await res.json();
+
+    if (!rows.length) { histEl.innerHTML = `<div style="padding:12px;text-align:center;color:var(--ink-muted);font-size:12px">Sin historial</div>`; return; }
+
+    let html = '';
+    rows.forEach((row, i) => {
+      const prev  = rows[i + 1];
+      const delta = prev ? parseFloat(row.unit_price) - parseFloat(prev.unit_price) : 0;
+      const deltaHtml = delta !== 0
+        ? `<span class="price-delta ${delta > 0 ? 'up' : 'down'}">${delta > 0 ? '▲' : '▼'} €${Math.abs(delta).toFixed(2)}</span>`
+        : '';
+      html += `
+        <div class="price-row">
+          <div>
+            <div class="price-date">${row.date?.value || row.date}</div>
+            <div class="price-store">${row.store}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span class="price-val">€${parseFloat(row.unit_price).toFixed(2)}</span>
+            ${deltaHtml}
+          </div>
+        </div>`;
+    });
+
+    historyCache[rawName] = html;
+    histEl.innerHTML = html;
+  } catch (e) {
+    histEl.innerHTML = `<div style="padding:12px;font-size:11px;color:var(--ink-muted)">Error: ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
