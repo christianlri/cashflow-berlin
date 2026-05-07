@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gcloud *)",
+      "Bash(bq *)",
+      "Bash(gh *)"
+    ]
+  }
+}

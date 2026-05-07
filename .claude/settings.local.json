@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gcloud --version)",
+      "Bash(gh --version)",
+      "Bash(bq version *)",
+      "PowerShell(gcloud --version 2>$null)",
+      "PowerShell(gh --version 2>$null)",
+      "PowerShell(bq version 2>$null)",
+      "PowerShell(winget --version 2>$null)",
+      "PowerShell(choco --version 2>$null)",
+      "PowerShell(winget install --id Google.CloudSDK --accept-package-agreements --accept-source-agreements)",
+      "PowerShell(winget install --id GitHub.cli --accept-package-agreements --accept-source-agreements)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\" -ErrorAction SilentlyContinue | Select-Object Name; Get-ChildItem \"C:\\\\Program Files\\\\Google\\\\Cloud SDK\" -ErrorAction SilentlyContinue | Select-Object Name; Get-ChildItem \"$env:LOCALAPPDATA\\\\Google\\\\Cloud SDK\" -ErrorAction SilentlyContinue | Select-Object Name)",
+      "PowerShell(head -30)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(mkdir -p c:/Users/CLRI_/cashflow-berlin/.claude)",
+      "Bash(mkdir -p \"C:/Users/CLRI_/.claude/projects/c--Users-CLRI--cashflow-berlin/memory\")",
+      "PowerShell($env:CLAUDE_CODE_GIT_BASH_PATH)",
+      "PowerShell(Get-ChildItem \"$env:LOCALAPPDATA\\\\Claude-3p\" -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object FullName -First 20)",
+      "Bash(code \"C:/Users/CLRI_/memory\")",
+      "PowerShell(code \"C:\\\\Users\\\\CLRI_\\\\memory\")",
+      "PowerShell(& \"C:\\\\Users\\\\CLRI_\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\bq.cmd\" show --format=prettyjson)",
+      "PowerShell(& \"C:\\\\Users\\\\CLRI_\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" auth list)",
+      "PowerShell(& \"C:\\\\Users\\\\CLRI_\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" config set account christian.larosa28@gmail.com)",
+      "PowerShell(& \"C:\\\\Users\\\\CLRI_\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\bq.cmd\" query --use_legacy_sql=false --project_id=spark-datahub \"UPDATE ``spark-datahub.cashflow.receipt_items`` SET category = 'Packaged Foods' WHERE category = 'Otros' AND item_raw_name IN \\('BEERENMUESLI', 'LANGKORNREIS', 'PARBOILED REIS', 'KOKOSMILCH', 'HEINZ KETCHUP', 'SCHWARZER SESAM'\\)\")",
+      "PowerShell(& \"C:\\\\Users\\\\CLRI_\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\bq.cmd\" query --use_legacy_sql=false --project_id=spark-datahub \"UPDATE ``spark-datahub.cashflow.receipt_items`` SET category = 'Limpieza del Hogar' WHERE category = 'Otros' AND item_raw_name IN \\('KL.PAPIERTASCHE', 'GR. PAPIERTASCHE', 'BAUMWOLLTASCHE', 'GEFRIERBEUTEL 3L', 'JA! BACKPAPIERZ'\\)\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\CLRI_\\cashflow-berlin\\.claude",
+      "C:\\Users\\CLRI_\\.claude\\projects\\c--Users-CLRI--cashflow-berlin"
+    ]
+  }
+}
