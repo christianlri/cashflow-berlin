@@ -61,9 +61,13 @@ export default async function handler(req, res) {
 
   const CARD = 'Interbank AMEX 6765';
   const allRaw = [];
+  const debugLog = [];
 
   for (const img of images) {
     try {
+      // Detect mime type from filename
+      const mimeType = img.name?.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
       const r = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
@@ -72,22 +76,30 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             contents: [{ parts: [
               { text: prompt(year) },
-              { inline_data: { mime_type: 'image/jpeg', data: img.data } },
+              { inline_data: { mime_type: mimeType, data: img.data } },
             ]}],
             generationConfig: { temperature: 0, response_mime_type: 'application/json' },
           }),
         }
       );
 
-      if (!r.ok) { console.error(`Gemini ${r.status} for ${img.name}`); continue; }
+      if (!r.ok) {
+        const errBody = await r.text();
+        debugLog.push({ file: img.name, error: `Gemini HTTP ${r.status}`, detail: errBody.slice(0, 300) });
+        console.error(`Gemini ${r.status} for ${img.name}:`, errBody.slice(0, 300));
+        continue;
+      }
 
       const gd   = await r.json();
       let   text = gd.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      debugLog.push({ file: img.name, raw: text.slice(0, 500) });
       text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
 
       const txns = JSON.parse(text);
+      debugLog[debugLog.length - 1].parsed = txns.length;
       allRaw.push(...txns);
     } catch (e) {
+      debugLog.push({ file: img.name, error: e.message });
       console.error(`Error on ${img.name}:`, e.message);
     }
   }
@@ -120,5 +132,5 @@ export default async function handler(req, res) {
     })
     .sort((a, b) => b.date.localeCompare(a.date));
 
-  return res.status(200).json({ transactions: rows });
+  return res.status(200).json({ transactions: rows, debug: debugLog });
 }
