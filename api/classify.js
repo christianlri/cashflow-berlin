@@ -107,7 +107,34 @@ export default async function handler(req, res) {
       const dataset = bigquery.dataset('cashflow');
       const table = dataset.table('data_bank_native');
 
-      const toInsert = rows.map(r => {
+      // Dedup against existing BQ rows (same date + card + commerce + amount)
+      const dates = [...new Set(rows.map(r => r.date))];
+      const cards = [...new Set(rows.map(r => r.card))];
+      const dateFilter = dates.map(d => `DATE '${d}'`).join(', ');
+      const cardFilter = cards.map(c => `'${c.replace(/'/g, "''")}'`).join(', ');
+
+      const [existingRows] = await bigquery.query(`
+        SELECT FORMAT_DATE('%Y-%m-%d', date) AS date_str, card, commerce, original_amount
+        FROM \`spark-datahub.cashflow.data_bank_native\`
+        WHERE date IN (${dateFilter})
+          AND card IN (${cardFilter})
+      `);
+
+      const existingKeys = new Set(
+        existingRows.map(r => `${r.date_str}|${r.card}|${r.commerce}|${r.original_amount}`)
+      );
+
+      const newRows = rows.filter(r => {
+        const key = `${r.date}|${r.card}|${r.commerce}|${r.original_amount}`;
+        return !existingKeys.has(key);
+      });
+
+      const skipped = rows.length - newRows.length;
+      if (!newRows.length) {
+        return res.status(200).json({ inserted: 0, skipped });
+      }
+
+      const toInsert = newRows.map(r => {
         const mapping = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered', finance_class: 'Not Considered' };
         const amounts = computeAmounts(r.eur_amount, r.currency, r.original_amount);
         return {
@@ -130,7 +157,7 @@ export default async function handler(req, res) {
       });
 
       await table.insert(toInsert);
-      return res.status(200).json({ inserted: toInsert.length });
+      return res.status(200).json({ inserted: toInsert.length, skipped });
     } catch (e) {
       return res.status(500).json({ error: e.message, details: e.errors });
     }
