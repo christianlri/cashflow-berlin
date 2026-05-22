@@ -15,6 +15,10 @@
     "api/receipts.js": {
       "memory": 512,
       "maxDuration": 30
+    },
+    "api/amex.js": {
+      "memory": 512,
+      "maxDuration": 60
     }
   },
   "routes": [
@@ -29,6 +33,10 @@
     {
       "src": "/despensa",
       "dest": "/despensa.html"
+    },
+    {
+      "src": "/amex",
+      "dest": "/amex.html"
     }
   ]
 }

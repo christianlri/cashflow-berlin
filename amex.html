@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palette · Interbank AMEX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --white: #ffffff;
+      --bg: #f5f5f7;
+      --ink: #0a0a0f;
+      --ink-soft: #4a4a5a;
+      --ink-muted: #9a9aaa;
+      --border: #e8e8f0;
+      --blue:    #2E428B;
+      --violet:  #7377EC;
+      --magenta: #B6346B;
+      --grad: linear-gradient(135deg, #2E428B 0%, #7377EC 50%, #B6346B 100%);
+      --green:      #00875a;
+      --green-soft: #e6f6f1;
+      --red:        #c0392b;
+      --red-soft:   #fdecea;
+      --amber:      #b45309;
+      --amber-soft: #fef3c7;
+      --card: #ffffff;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ── HEADER ── */
+    header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+    .header-inner { max-width: 680px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .logo-mark { width: 26px; height: 26px; background: var(--grad); border-radius: 7px; flex-shrink: 0; }
+    .logo-name { font-size: 16px; font-weight: 700; letter-spacing: -0.5px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-page { font-size: 13px; font-weight: 500; color: var(--ink-muted); }
+
+    main { padding: 20px 16px 60px; max-width: 680px; margin: 0 auto; }
+
+    /* ── CARD BANNER ── */
+    .card-banner { background: var(--ink); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 4px; display: flex; align-items: center; gap: 16px; }
+    .card-logo { width: 40px; height: 26px; background: #007bc1; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-logo svg { width: 32px; }
+    .card-info-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .card-info-value { font-size: 14px; color: white; font-weight: 600; margin-top: 2px; }
+
+    /* ── SECTION LABEL ── */
+    .section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); margin: 20px 0 10px; }
+
+    /* ── UPLOAD ZONE ── */
+    .upload-zone { background: var(--white); border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--violet); background: rgba(115,119,236,0.04); }
+    .upload-icon  { font-size: 36px; margin-bottom: 12px; }
+    .upload-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+    .upload-sub   { font-size: 12px; color: var(--ink-muted); font-weight: 400; }
+    #fileInput { display: none; }
+
+    /* ── PROGRESS ── */
+    .progress-bar-wrap { background: rgba(115,119,236,0.1); border-radius: 4px; height: 4px; margin-top: 16px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--grad); border-radius: 4px; transition: width 0.3s ease; }
+
+    /* ── STATS BAR ── */
+    .stats-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .stat-pill { border-radius: 20px; padding: 5px 12px; font-size: 11px; font-weight: 600; border: 1.5px solid; }
+    .stat-pill.green  { background: var(--green-soft);  border-color: var(--green);  color: var(--green);  }
+    .stat-pill.amber  { background: var(--amber-soft);  border-color: var(--amber);  color: var(--amber);  }
+    .stat-pill.violet { background: rgba(115,119,236,0.1); border-color: var(--violet); color: var(--blue); }
+    .stat-pill.muted  { background: var(--bg); border-color: var(--border); color: var(--ink-muted); }
+
+    /* ── FILTER TABS ── */
+    .filter-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+    .filter-tab { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: all 0.15s; font-family: 'Outfit', sans-serif; }
+    .filter-tab.active { background: var(--grad); border-color: transparent; color: white; }
+    .filter-tab .count { display: inline-block; background: rgba(0,0,0,0.12); border-radius: 10px; padding: 0 6px; margin-left: 4px; font-size: 10px; }
+    .filter-tab.active .count { background: rgba(255,255,255,0.25); }
+
+    /* ── TX ROWS ── */
+    .rows-list { display: flex; flex-direction: column; gap: 6px; }
+    .tx-row { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; display: grid; grid-template-columns: 76px 1fr auto; gap: 8px; align-items: center; transition: border-color 0.15s; }
+    .tx-row.approved { border-color: var(--green); }
+    .tx-row.skipped  { opacity: 0.35; }
+    .tx-date        { font-size: 11px; color: var(--ink-muted); font-weight: 400; }
+    .tx-card-label  { font-size: 10px; color: var(--ink-muted); margin-top: 2px; font-weight: 400; }
+    .tx-vendor { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+    .tx-fc     { font-size: 10px; color: var(--ink-muted); margin-top: 2px; font-weight: 400; }
+    .tx-right  { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .tx-amount     { font-size: 14px; font-weight: 700; white-space: nowrap; }
+    .tx-amount.neg { color: var(--red); }
+    .tx-amount-sub { font-size: 10px; color: var(--ink-muted); font-weight: 400; white-space: nowrap; }
+    .badge-proceso { display: inline-block; background: var(--amber-soft); border: 1px solid var(--amber); color: var(--amber); font-size: 9px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── CAT SELECT ── */
+    .cat-select { font-size: 11px; font-weight: 600; border: 1.5px solid var(--border); border-radius: 8px; padding: 4px 8px; background: var(--bg); color: var(--ink); cursor: pointer; max-width: 160px; font-family: 'Outfit', sans-serif; }
+    .cat-select.historical { border-color: var(--green);  background: var(--green-soft);           color: var(--green); }
+    .cat-select.inferred   { border-color: var(--amber);  background: var(--amber-soft);           color: var(--amber); }
+    .cat-select.manual     { border-color: var(--violet); background: rgba(115,119,236,0.1);       color: var(--blue);  }
+    .skip-btn { font-size: 10px; color: var(--ink-muted); background: none; border: none; cursor: pointer; padding: 2px 4px; text-decoration: underline; font-family: 'Outfit', sans-serif; font-weight: 500; }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar { position: sticky; bottom: 0; background: var(--ink); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .bottom-info { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 400; }
+    .bottom-info strong { color: white; font-weight: 600; }
+    .btn { padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'Outfit', sans-serif; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--grad); color: white; }
+    .btn-ghost   { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+
+    /* ── RESULT ── */
+    #resultMsg { background: var(--green-soft); border: 1.5px solid var(--green); border-radius: var(--radius); padding: 16px; text-align: center; font-size: 14px; font-weight: 600; color: var(--green); display: none; margin-top: 16px; }
+
+    /* ── SPINNER ── */
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.1); border-top-color: var(--violet); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    .spinner.white { border-color: rgba(255,255,255,0.2); border-top-color: white; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { opacity: 0; animation: fadeUp 0.3s ease forwards; }
+    @keyframes fadeUp { to { opacity: 1; } }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-muted); font-size: 13px; font-weight: 400; }
+
+    /* ── ERROR ── */
+    .error-box { background: var(--red-soft); border: 1.5px solid var(--red); border-radius: var(--radius); padding: 16px; font-size: 13px; color: var(--red); margin-top: 12px; display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark"></div>
+      <div class="logo-name">Palette</div>
+    </a>
+    <div class="header-page">Interbank AMEX</div>
+  </div>
+</header>
+
+<main>
+  <!-- Card info banner -->
+  <div style="margin-bottom:16px">
+    <div class="section-label">Tarjeta</div>
+    <div class="card-banner">
+      <div class="card-logo">
+        <!-- American Express icon -->
+        <svg viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="2" y="22" font-family="Arial" font-size="14" font-weight="900" fill="white">AMEX</text>
+        </svg>
+      </div>
+      <div>
+        <div class="card-info-label">Interbank Peru</div>
+        <div class="card-info-value">American Express · 6765</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Screenshots del app</div>
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📸</div>
+    <div class="upload-title">Arrastra screenshots o click para seleccionar</div>
+    <div class="upload-sub">Interbank app → Mi tarjeta → Movimientos · Acepta varios JPEGs a la vez</div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png" multiple />
+  </div>
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="classifySection" style="display:none">
+    <div class="section-label">Revisión</div>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="filter-tabs">
+      <div class="filter-tab active" onclick="setFilter('all')">Todas <span class="count" id="countAll">0</span></div>
+      <div class="filter-tab" onclick="setFilter('review')">Revisar <span class="count" id="countReview">0</span></div>
+      <div class="filter-tab" onclick="setFilter('skipped')">Omitidas <span class="count" id="countSkipped">0</span></div>
+    </div>
+    <div class="rows-list" id="rowsList"></div>
+    <div id="resultMsg"></div>
+  </div>
+</main>
+
+<div class="bottom-bar" id="bottomBar" style="display:none">
+  <div class="bottom-info">
+    <strong id="approvedCount">0</strong> listas · <strong id="skipCount">0</strong> omitidas
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-ghost" onclick="approveAll()">Aprobar todo</button>
+    <button class="btn btn-primary" id="loadBtn" onclick="loadToDb()">Cargar a BigQuery</button>
+  </div>
+</div>
+
+<script>
+const CLASSIFY_API = '/api/classify';
+const AMEX_API     = '/api/amex';
+
+// ── Category map (same source of truth as classify.js) ──────────────────────
+const CATEGORY_MAP = {
+  'Delivery':           { finance_category: '5. True Cash Flow',         finance_class: 'Expected Cost of Living' },
+  'Pet':                { finance_category: '5. True Cash Flow',         finance_class: 'Expected Cost of Living' },
+  'Food':               { finance_category: '4. Quality of Life Margin', finance_class: 'Expected Cost of Living' },
+  'Service':            { finance_category: '4. Quality of Life Margin', finance_class: 'Expected Cost of Living' },
+  'Services':           { finance_category: '4. Quality of Life Margin', finance_class: 'Expected Cost of Living' },
+  'Subscription':       { finance_category: '4. Quality of Life Margin', finance_class: 'Expected Cost of Living' },
+  'Groceries':          { finance_category: '3. Vital Surplus',          finance_class: 'Expected Cost of Living' },
+  'Health':             { finance_category: '3. Vital Surplus',          finance_class: 'Expected Cost of Living' },
+  'Non Food Groceries': { finance_category: '3. Vital Surplus',          finance_class: 'Expected Cost of Living' },
+  'Hair':               { finance_category: '3. Vital Surplus',          finance_class: 'Expected Cost of Living' },
+  'Parking':            { finance_category: '3. Vital Surplus',          finance_class: 'Expected Cost of Living' },
+  'Transport':          { finance_category: '3. Vital Surplus',          finance_class: 'Expected Cost of Living' },
+  'Network':            { finance_category: '2. Foundational Margin',    finance_class: 'Expected Cost of Living' },
+  'Rent':               { finance_category: '2. Foundational Margin',    finance_class: 'Expected Rent'           },
+  'Clothing':           { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Christmas Deco':     { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Other':              { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Tech':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Trip':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Housing':            { finance_category: '3. Vital Surplus',          finance_class: 'Extra & One-Offs'        },
+  'Income':             { finance_category: '1. Earnings Net',           finance_class: ''                        },
+  'Finance':            { finance_category: 'Not Considered',            finance_class: 'Not Considered'          },
+};
+const ALL_CATEGORIES = Object.keys(CATEGORY_MAP);
+
+// ── Inference rules (base N26 rules + Interbank-specific) ──────────────────
+const INFERENCE_RULES = [
+  { kw: ['rewe', 'kaufland', 'lidl', 'netto', 'aldi', 'edeka', 'albert heijn', 'mustafa', 'denns', 'bio company'], cat: 'Groceries' },
+  { kw: ['wolt', 'pedidosya', 'delivery hero', 'lieferando', 'shift4*wolt', 'uber eats'], cat: 'Delivery' },
+  { kw: ['le crobag', 'ben rahim', 'kuchi', 'amrit', 'burger king', 'mcdonald', 'starbucks', 'kamps', 'nordsee', 'backwerk', 'ditsch', 'barist', 'restaurant', 'cafe', '3cpayment', 'hackescher'], cat: 'Food' },
+  { kw: ['bvg', 'berliner verkehr', 'bolt', 'lime', 'tier', 'tfl', 'uber trip', 'db retorno'], cat: 'Transport' },
+  { kw: ['apotheke', 'mediserv', 'urban sports', 'vitapoint', 'docortho'], cat: 'Health' },
+  { kw: ['openai', 'chatgpt', 'spotify', 'netflix', 'audible', 'claude.ai', 'proton', 'apple.com/bill', 'suno', 'wolt plus'], cat: 'Subscription' },
+  { kw: ['zara', 'kg zara', 'uniqlo', 'h&m', 'decathlon', 'zalando', 'tk maxx', 'sephora'], cat: 'Clothing' },
+  { kw: ['mediamarkt', 'samsung', 'anthropic'], cat: 'Tech' },
+  { kw: ['movistar', 'telefonica', 'vodafone', 'gocardless'], cat: 'Network' },
+  { kw: ['ikea', 'bauhaus', 'obi', 'hornbach'], cat: 'Housing' },
+  { kw: ['museum', 'easyjet', 'ryanair', 'ibis', 'abbey road', 'caba'], cat: 'Trip' },
+  { kw: ['seguro', 'desgravamen', 'revolut', 'wise', 'cash26', 'rundfunk'], cat: 'Finance' },
+  { kw: ['amzn mktp', 'amazon'], cat: 'Other' },
+];
+
+function inferCategory(merchant) {
+  const v = merchant.toLowerCase();
+  for (const rule of INFERENCE_RULES)
+    if (rule.kw.some(k => v.includes(k))) return rule.cat;
+  return null;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatCurrency(amount, currency) {
+  const abs = Math.abs(amount);
+  if (currency === 'usd') return `US$ ${abs.toFixed(2)}`;
+  if (currency === 'pen') return `S/ ${abs.toFixed(2)}`;
+  return `€${abs.toFixed(2)}`;
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+let parsedRows    = [];
+let vendorMap     = {};
+let rowStates     = [];
+let currentFilter = 'all';
+
+// ── Load vendor map from BigQuery on page load ────────────────────────────────
+async function loadVendorMap() {
+  try {
+    const res  = await fetch(CLASSIFY_API);
+    const data = await res.json();
+    vendorMap  = data.vendorMap || {};
+  } catch (_) { /* non-fatal */ }
+}
+loadVendorMap();
+
+// ── Upload zone ───────────────────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+const fileInput  = document.getElementById('fileInput');
+
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop',      e  => { e.preventDefault(); uploadZone.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change',     e  => handleFiles(e.target.files));
+
+async function handleFiles(files) {
+  if (!files?.length) return;
+
+  const total = files.length;
+  showError('');
+  uploadZone.innerHTML = `
+    <div style="padding:8px 0">
+      <span class="spinner"></span>
+      <span id="progressText" style="font-size:14px;font-weight:600;color:var(--ink)">Procesando 1 / ${total}…</span>
+      <div class="progress-bar-wrap" style="margin-top:16px">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>`;
+
+  const allTxns = [];
+
+  for (let i = 0; i < total; i++) {
+    const file = files[i];
+    document.getElementById('progressText').textContent = `Procesando ${i+1} / ${total} — ${file.name.split('/').pop()}`;
+    document.getElementById('progressBar').style.width  = `${Math.round((i / total) * 100)}%`;
+
+    try {
+      const b64 = await toBase64(file);
+      const res = await fetch(AMEX_API, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ images: [{ name: file.name, data: b64 }] }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      allTxns.push(...(data.transactions || []));
+    } catch (e) {
+      showError(`Error en "${file.name}": ${e.message}`);
+      resetUploadZone();
+      return;
+    }
+  }
+
+  document.getElementById('progressBar').style.width = '100%';
+
+  // Deduplicate across images (same key = same transaction)
+  const seen   = new Set();
+  const unique = [];
+  for (const t of allTxns) {
+    const key = `${t.date}|${t.commerce?.toLowerCase()}|${t.original_amount}|${t.currency}`;
+    if (!seen.has(key)) { seen.add(key); unique.push(t); }
+  }
+
+  if (!unique.length) {
+    showError('No se encontraron transacciones. Revisa que los screenshots sean de la sección "Movimientos" de Interbank.');
+    resetUploadZone();
+    return;
+  }
+
+  // Map to classify rows
+  parsedRows = unique.map(t => {
+    const hist     = vendorMap[t.commerce];
+    const inferred = inferCategory(t.commerce);
+    const category = hist || inferred || 'Other';
+    const source   = hist ? 'historical' : inferred ? 'inferred' : 'manual';
+    return { ...t, category, source };
+  });
+
+  rowStates     = parsedRows.map(() => 'approved');
+  currentFilter = 'all';
+
+  uploadZone.style.display = 'none';
+  document.getElementById('classifySection').style.display = 'block';
+  document.getElementById('bottomBar').style.display       = 'flex';
+  renderRows();
+  updateStats();
+}
+
+function resetUploadZone() {
+  uploadZone.style.display = 'block';
+  uploadZone.innerHTML = `
+    <div class="upload-icon">📸</div>
+    <div class="upload-title">Arrastra screenshots o click para seleccionar</div>
+    <div class="upload-sub">Interbank app → Mi tarjeta → Movimientos · Acepta varios JPEGs a la vez</div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png" multiple />`;
+  document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
+}
+
+function showError(msg) {
+  const box      = document.getElementById('errorBox');
+  box.style.display = msg ? 'block' : 'none';
+  box.textContent   = msg;
+}
+
+// ── Filter tabs ──────────────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['all','review','skipped'][i] === f);
+  });
+  renderRows();
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function renderRows() {
+  const list    = document.getElementById('rowsList');
+  const visible = parsedRows.reduce((acc, r, i) => {
+    if (currentFilter === 'all') acc.push(i);
+    else if (currentFilter === 'review'  && r.source !== 'historical' && rowStates[i] !== 'skipped') acc.push(i);
+    else if (currentFilter === 'skipped' && rowStates[i] === 'skipped') acc.push(i);
+    return acc;
+  }, []);
+
+  if (!visible.length) {
+    list.innerHTML = `<div class="empty-state">${currentFilter === 'review' ? '✓ Todo clasificado del historial' : 'No hay transacciones aquí'}</div>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(i => {
+    const r      = parsedRows[i];
+    const state  = rowStates[i];
+    const map    = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered' };
+    const selCls = r.source === 'historical' ? 'historical' : r.source === 'inferred' ? 'inferred' : 'manual';
+    const origLabel = formatCurrency(r.original_amount, r.currency);
+
+    return `
+      <div class="tx-row ${state} fade-in" id="row-${i}">
+        <div>
+          <div class="tx-date">${r.date}</div>
+          <div class="tx-card-label">AMEX 6765</div>
+        </div>
+        <div style="min-width:0">
+          <div class="tx-vendor" title="${r.commerce}">${r.commerce}</div>
+          <div class="tx-fc">${map.finance_category}${r.en_proceso ? ' <span class="badge-proceso">En proceso</span>' : ''}</div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount neg">€${Math.abs(r.eur_amount).toFixed(2)}</div>
+          <div class="tx-amount-sub">${origLabel}</div>
+          <select class="cat-select ${selCls}" onchange="changeCategory(${i}, this.value)">
+            ${ALL_CATEGORIES.map(c => `<option value="${c}"${c === r.category ? ' selected' : ''}>${c}</option>`).join('')}
+          </select>
+          <button class="skip-btn" onclick="toggleSkip(${i})">${state === 'skipped' ? 'restaurar' : 'omitir'}</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Interactions ─────────────────────────────────────────────────────────────
+function changeCategory(i, cat) {
+  parsedRows[i].category = cat;
+  parsedRows[i].source   = 'manual';
+  rowStates[i]           = 'approved';
+  renderRows();
+  updateStats();
+}
+
+function toggleSkip(i) {
+  rowStates[i] = rowStates[i] === 'skipped' ? 'approved' : 'skipped';
+  renderRows();
+  updateStats();
+}
+
+function approveAll() {
+  rowStates = rowStates.map(s => s === 'skipped' ? 'skipped' : 'approved');
+  renderRows();
+  updateStats();
+}
+
+function updateStats() {
+  const approved   = rowStates.filter(s => s === 'approved').length;
+  const skipped    = rowStates.filter(s => s === 'skipped').length;
+  const historical = parsedRows.filter((r,i) => r.source === 'historical' && rowStates[i] !== 'skipped').length;
+  const inferred   = parsedRows.filter((r,i) => r.source === 'inferred'   && rowStates[i] !== 'skipped').length;
+  const manual     = parsedRows.filter((r,i) => r.source === 'manual'     && rowStates[i] !== 'skipped').length;
+  const toReview   = parsedRows.filter((r,i) => r.source !== 'historical' && rowStates[i] !== 'skipped').length;
+
+  document.getElementById('statsBar').innerHTML = `
+    ${historical > 0 ? `<div class="stat-pill green">✓ ${historical} del historial</div>` : ''}
+    ${inferred   > 0 ? `<div class="stat-pill amber">~ ${inferred} inferidas</div>` : ''}
+    ${manual     > 0 ? `<div class="stat-pill violet">✎ ${manual} manuales</div>` : ''}
+    ${skipped    > 0 ? `<div class="stat-pill muted">⊘ ${skipped} omitidas</div>` : ''}
+  `;
+  document.getElementById('approvedCount').textContent = approved;
+  document.getElementById('skipCount').textContent     = skipped;
+  document.getElementById('countAll').textContent      = parsedRows.length;
+  document.getElementById('countReview').textContent   = toReview;
+  document.getElementById('countSkipped').textContent  = skipped;
+}
+
+// ── Insert to BigQuery ───────────────────────────────────────────────────────
+async function loadToDb() {
+  const btn    = document.getElementById('loadBtn');
+  const toLoad = parsedRows.filter((_, i) => rowStates[i] === 'approved');
+  if (!toLoad.length) return;
+
+  btn.innerHTML = '<span class="spinner white"></span> Cargando...';
+  btn.disabled  = true;
+
+  // classify.js POST expects: { rows: [{ date, card, commerce, eur_amount, currency, original_amount, category }] }
+  const rows = toLoad.map(r => ({
+    date:            r.date,
+    card:            r.card,
+    commerce:        r.commerce,
+    eur_amount:      r.eur_amount,
+    currency:        r.currency,
+    original_amount: r.original_amount,
+    category:        r.category,
+  }));
+
+  try {
+    const res  = await fetch(CLASSIFY_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) });
+    const data = await res.json();
+    if (data.inserted) {
+      const msg        = document.getElementById('resultMsg');
+      msg.style.display = 'block';
+      msg.textContent   = `✓ ${data.inserted} transacciones cargadas a BigQuery`;
+      document.getElementById('bottomBar').style.display = 'none';
+    } else throw new Error(data.error || 'Error desconocido');
+  } catch (e) {
+    btn.innerHTML = '⚠️ Error — reintentar';
+    btn.disabled  = false;
+    alert('Error: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
