@@ -124,14 +124,16 @@ export default async function handler(req, res) {
         existingRows.map(r => `${r.date_str}|${r.card}|${r.commerce}|${r.original_amount}`)
       );
 
-      const newRows = rows.filter(r => {
+      const newRows     = [];
+      const skippedRows = [];
+      for (const r of rows) {
         const key = `${r.date}|${r.card}|${r.commerce}|${r.original_amount}`;
-        return !existingKeys.has(key);
-      });
+        if (existingKeys.has(key)) skippedRows.push({ date: r.date, commerce: r.commerce, original_amount: r.original_amount, currency: r.currency });
+        else newRows.push(r);
+      }
 
-      const skipped = rows.length - newRows.length;
       if (!newRows.length) {
-        return res.status(200).json({ inserted: 0, skipped });
+        return res.status(200).json({ inserted: 0, skipped: skippedRows.length, skippedRows });
       }
 
       const toInsert = newRows.map(r => {
@@ -157,7 +159,7 @@ export default async function handler(req, res) {
       });
 
       await table.insert(toInsert);
-      return res.status(200).json({ inserted: toInsert.length, skipped });
+      return res.status(200).json({ inserted: toInsert.length, skipped: skippedRows.length, skippedRows });
     } catch (e) {
       return res.status(500).json({ error: e.message, details: e.errors });
     }

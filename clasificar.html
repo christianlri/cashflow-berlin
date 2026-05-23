@@ -114,16 +114,53 @@
 
     /* ── EMPTY STATE ── */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-muted); font-size: 13px; font-weight: 400; }
+
+    /* ── SIDEBAR NAV ── */
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .nav-overlay.open { opacity: 1; pointer-events: all; }
+    .nav-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--white); z-index: 201; transform: translateX(-100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; }
+    .nav-sidebar.open { transform: translateX(0); }
+    .nav-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .nav-logo-mark { width: 24px; height: 24px; background: var(--grad); border-radius: 6px; flex-shrink: 0; }
+    .nav-logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.5px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-links { padding: 12px 8px; flex: 1; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 500; color: var(--ink-soft); transition: background 0.15s; }
+    .nav-link:hover { background: var(--bg); color: var(--ink); }
+    .nav-link.active { background: rgba(115,119,236,0.1); color: var(--blue); font-weight: 600; }
+    .nav-link-icon { font-size: 18px; width: 24px; text-align: center; }
+    .hamburger { background: none; border: none; cursor: pointer; padding: 8px; display: flex; flex-direction: column; gap: 4px; border-radius: 8px; transition: background 0.15s; }
+    .hamburger:hover { background: var(--bg); }
+    .hamburger span { display: block; width: 18px; height: 2px; background: var(--ink-soft); border-radius: 2px; }
   </style>
 </head>
 <body>
 
+<!-- Sidebar nav -->
+<div class="nav-overlay" id="navOverlay" onclick="closeSidebar()"></div>
+<nav class="nav-sidebar" id="navSidebar">
+  <div class="nav-header">
+    <div class="nav-logo-mark"></div>
+    <div class="nav-logo-name">Palette</div>
+  </div>
+  <div class="nav-links">
+    <a href="/palette"    class="nav-link"><span class="nav-link-icon">📊</span> Dashboard</a>
+    <a href="/clasificar" class="nav-link active"><span class="nav-link-icon">🏦</span> N26</a>
+    <a href="/amex"       class="nav-link"><span class="nav-link-icon">💳</span> Interbank AMEX</a>
+    <a href="/despensa"   class="nav-link"><span class="nav-link-icon">🛒</span> Despensa</a>
+  </div>
+</nav>
+
 <header>
   <div class="header-inner">
-    <a href="/" class="logo">
-      <div class="logo-mark"></div>
-      <div class="logo-name">Palette</div>
-    </a>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="/" class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-name">Palette</div>
+      </a>
+    </div>
     <div class="header-page">Clasificar transacciones</div>
   </div>
 </header>
@@ -416,6 +453,15 @@ async function loadToDb() {
     btn.disabled  = false;
     alert('Error: ' + e.message);
   }
+}
+
+function openSidebar()  {
+  document.getElementById('navSidebar').classList.add('open');
+  document.getElementById('navOverlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('navSidebar').classList.remove('open');
+  document.getElementById('navOverlay').classList.remove('open');
 }
 </script>
 </body>
