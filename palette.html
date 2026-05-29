@@ -651,7 +651,7 @@ async function renderSummary(data) {
   }).filter(Boolean);
 
   const salaryArrived = dhSalaryArrived(data);
-  const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
+  const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && r.category !== 'Income').reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
   const income        = salaryArrived ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0) : INCOME_TARGET;
   const grandTotal    = income + spentSoFar;
 
@@ -679,7 +679,7 @@ async function renderSummary(data) {
 
 function renderHero(data) {
   const salaryArrived = dhSalaryArrived(data);
-  const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && parseFloat(r.eur_amount) < 0).reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
+  const spentSoFar    = data.filter(r => r.finance_category !== 'Not Considered' && r.category !== 'Income').reduce((s,r) => s+(parseFloat(r.eur_amount)||0), 0);
   const income        = salaryArrived ? data.filter(r => r.finance_category === '1. Earnings Net').reduce((s,r) => s+(parseFloat(r.eur_amount)||0),0) : INCOME_TARGET;
   const net           = income + spentSoFar;
   const vsTarget      = net - TCF_TARGET;
@@ -801,7 +801,7 @@ function renderCategories(data) {
               <div class="cat-tx-vendor">${tx.commerce || '—'}</div>
               <div class="cat-tx-date">${tx.date || ''}</div>
             </div>
-            <div class="cat-tx-amount">−€${Math.abs(tx.eur).toFixed(2)}</div>
+            <div class="cat-tx-amount" style="color:${tx.eur > 0 ? 'var(--green)' : 'var(--red)'}">${tx.eur > 0 ? '+' : '−'}€${Math.abs(tx.eur).toFixed(2)}</div>
           </div>`).join('')
       : `<div class="cat-tx"><div class="cat-tx-date">Sin transacciones</div></div>`;
 
@@ -811,8 +811,8 @@ function renderCategories(data) {
           <div class="cat-bar-wrap">
             <div class="cat-name-row">
               <span class="cat-name">${r.cat}</span>
-              <span class="cat-eur" style="color:${over ? 'var(--red)' : 'var(--ink)'}">
-                €${Math.round(r.spent)}<span style="font-size:10px;color:var(--ink-muted);font-weight:400"> / €${r.target}</span>${over ? ' ⚠️' : ''}
+              <span class="cat-eur" style="color:${r.spent < 0 ? 'var(--green)' : over ? 'var(--red)' : 'var(--ink)'}">
+                ${r.spent < 0 ? '+' : ''}€${Math.abs(Math.round(r.spent))}${r.spent < 0 ? ' neto' : ''}<span style="font-size:10px;color:var(--ink-muted);font-weight:400"> / €${r.target}</span>${over ? ' ⚠️' : ''}
               </span>
             </div>
             <div class="cat-bar-bg">
