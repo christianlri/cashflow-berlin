@@ -598,9 +598,9 @@ async function renderSummary(data) {
       if (mo !== prevMonth) return;
       if (!r.category || r.finance_category === 'Not Considered') return;
       const eur = parseFloat(r.eur_amount) || 0;
-      if (eur >= 0) return;
+      if (r.category === 'Income') return;
       if (!prevMonthSpend[r.category]) prevMonthSpend[r.category] = 0;
-      prevMonthSpend[r.category] += Math.abs(eur);
+      prevMonthSpend[r.category] -= eur;
     });
   }
 
@@ -608,9 +608,9 @@ async function renderSummary(data) {
   data.forEach(r => {
     if (!r.category || r.finance_category === 'Not Considered') return;
     const eur = parseFloat(r.eur_amount) || 0;
-    if (eur >= 0) return;
+    if (r.category === 'Income') return;
     if (!categorySpend[r.category]) categorySpend[r.category] = 0;
-    categorySpend[r.category] += Math.abs(eur);
+    categorySpend[r.category] -= eur;
   });
 
   const FOCUS_CATS = ['Groceries','Delivery','Food','Transport','Health','Clothing','Subscription','Trip','Network','Other'];
@@ -698,7 +698,7 @@ function renderHero(data) {
 function renderLifeUnits(data) {
   document.getElementById('lifeUnitsGrid').innerHTML = LIFE_UNITS.map(u => {
     const target         = Math.abs(CATEGORY_TARGETS[u.key] || 0);
-    const spent          = data.filter(r => r.category === u.key && r.finance_category !== 'Not Considered').reduce((s,r) => s+Math.abs(parseFloat(r.eur_amount)||0), 0);
+    const spent          = data.filter(r => r.category === u.key && r.finance_category !== 'Not Considered' && r.category !== 'Income').reduce((s,r) => s-(parseFloat(r.eur_amount)||0), 0);
     const remaining      = Math.max(0, target - spent);
     const unitsRemaining = Math.floor(remaining / u.avgEur);
     const pct            = target > 0 ? Math.min(100, (spent / target) * 100) : 0;
@@ -775,10 +775,10 @@ function renderCategories(data) {
   data.forEach(r => {
     if (!r.category || r.finance_category === 'Not Considered') return;
     const eur = parseFloat(r.eur_amount) || 0;
-    if (eur >= 0) return;
+    if (r.category === 'Income') return;
     if (!cats[r.category])   cats[r.category]   = 0;
     if (!catTxs[r.category]) catTxs[r.category] = [];
-    cats[r.category] += Math.abs(eur);
+    cats[r.category] -= eur;
     catTxs[r.category].push({ date: r.date?.value || r.date, commerce: r.commerce, eur });
   });
 
