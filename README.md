@@ -98,6 +98,113 @@ Upload N26 CSV exports. Transactions are classified and inserted into BigQuery v
 
 ---
 
+## WhatsApp Pipeline (n8n)
+
+Automated ingestion via WhatsApp photo → Gemini OCR → BigQuery. Runs on [n8n Cloud](https://spark-data.app.n8n.cloud).
+
+### Flow
+
+```
+WhatsApp photo (Twilio)
+  → Download Image       (n8n HTTP Request — Twilio Basic Auth)
+  → To Base64            (n8n Move Binary Data)
+  → Build Gemini Body    (n8n Code)
+  → Gemini OCR           (n8n HTTP Request — Gemini 2.5 Flash)
+  → Parse Transactions   (n8n Code)
+  → Group Rows           (n8n Code — adds card name)
+  → Fetch Vendor Map     (GET /api/classify)
+  → Match Categories     (n8n Code — vendorMap + inference rules)
+  → Load to BigQuery     (POST /api/classify)
+```
+
+### Node Code
+
+**Build Gemini Body**
+```javascript
+const item = $input.first();
+const imageData = item.json.data;
+const mimeType = 'image/jpeg';
+const today = new Date().toISOString().split('T')[0];
+
+return [{
+  json: {
+    geminiBody: {
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mimeType, data: imageData } },
+          { text: `Today's date is ${today}. Analyze this bank statement screenshot and extract all transactions. Return a JSON array where each item has: date (YYYY-MM-DD), commerce (merchant name), eur_amount (negative for expenses), currency (eur/usd/pen), original_amount. Only return the JSON array, nothing else.` }
+        ]
+      }]
+    }
+  }
+}];
+```
+
+**Parse Transactions**
+```javascript
+const text = $input.first().json.candidates[0].content.parts[0].text;
+const cleaned = text.replace(/```json\n?/, '').replace(/```$/, '').trim();
+const transactions = JSON.parse(cleaned);
+return transactions.map(t => ({ json: t }));
+```
+
+**Group Rows**
+```javascript
+const rows = $input.all().map(i => ({
+  ...i.json,
+  card: 'Interbank AMEX 6765',
+  category: 'Other'
+}));
+return [{ json: { rows } }];
+```
+
+**Match Categories**
+```javascript
+const vendorMap = $('Fetch Vendor Map').first().json.vendorMap;
+const rows = $('Group Rows').first().json.rows;
+
+const INFERENCE_RULES = [
+  { kw: ['rewe', 'kaufland', 'lidl', 'netto', 'aldi', 'edeka', 'mustafa', 'denns', 'bio company'], cat: 'Groceries' },
+  { kw: ['wolt', 'pedidosya', 'lieferando', 'uber eats'], cat: 'Delivery' },
+  { kw: ['le crobag', 'burger king', 'mcdonald', 'starbucks', 'restaurant', 'cafe'], cat: 'Food' },
+  { kw: ['bvg', 'bolt', 'lime', 'tier', 'uber trip'], cat: 'Transport' },
+  { kw: ['apotheke', 'urban sports'], cat: 'Health' },
+  { kw: ['openai', 'chatgpt', 'spotify', 'netflix', 'audible', 'proton', 'apple.com/bill', 'claude.ai'], cat: 'Subscription' },
+  { kw: ['zara', 'uniqlo', 'h&m', 'decathlon', 'zalando', 'tk maxx'], cat: 'Clothing' },
+  { kw: ['mediamarkt', 'samsung', 'anthropic'], cat: 'Tech' },
+  { kw: ['ikea', 'bauhaus', 'obi', 'hornbach'], cat: 'Housing' },
+  { kw: ['easyjet', 'ryanair', 'ibis'], cat: 'Trip' },
+  { kw: ['seguro', 'desgravamen', 'revolut', 'wise', 'pago tarj'], cat: 'Finance' },
+];
+
+function infer(commerce) {
+  const v = commerce.toLowerCase();
+  for (const rule of INFERENCE_RULES)
+    if (rule.kw.some(k => v.includes(k))) return rule.cat;
+  return null;
+}
+
+return [{ json: { rows: rows.map(r => {
+  const hist = vendorMap[r.commerce];
+  const inf  = infer(r.commerce);
+  const category = hist || inf || 'Other';
+  return { ...r, category, matched: !!(hist || inf) };
+})}}];
+```
+
+### Twilio Sandbox
+- Number: `+1 415 523 8886`
+- Webhook: `https://spark-data.app.n8n.cloud/webhook/whatsapp` (POST)
+- To activate sandbox: send `join <word>` to the number via WhatsApp
+
+### Credentials needed in n8n
+| Credential | Used in |
+|---|---|
+| Twilio Basic Auth (Account SID + Auth Token) | Download Image |
+| Gemini Header Auth (`x-goog-api-key`) | Gemini OCR |
+
+---
+
 ## Local Development
 
 No local server needed — all APIs run on Vercel. To test locally you'd need `vercel dev` with env vars set.

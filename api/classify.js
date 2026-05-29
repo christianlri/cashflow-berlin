@@ -28,6 +28,7 @@ const CATEGORY_MAP = {
   'Trip':                { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Housing':             { finance_category: '3. Vital Surplus',          finance_class: 'Extra & One-Offs'        },
   'Income':              { finance_category: '1. Earnings Net',           finance_class: ''                        },
+  'Finance':             { finance_category: 'Not Considered',            finance_class: 'Not Considered'           },
 };
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_MAP);
@@ -127,6 +128,10 @@ export default async function handler(req, res) {
       const newRows     = [];
       const skippedRows = [];
       for (const r of rows) {
+        if (r.category === 'Finance') {
+          skippedRows.push({ date: r.date, commerce: r.commerce, original_amount: r.original_amount, currency: r.currency, reason: 'finance' });
+          continue;
+        }
         const key = `${r.date}|${r.card}|${r.commerce}|${r.original_amount}`;
         if (existingKeys.has(key)) skippedRows.push({ date: r.date, commerce: r.commerce, original_amount: r.original_amount, currency: r.currency });
         else newRows.push(r);
