@@ -1,7 +1,16 @@
 // POST /api/amex
-// Body: { images: [{ name: string, data: string (base64 JPEG) }] }
+// Body: { images: [{ name: string, data: string (base64 JPEG) }], card?: 'amex' | 'premia' }
 // Returns: { transactions: [...] }
 // Requires env var: GEMINI_API_KEY (free key from https://aistudio.google.com/app/apikey)
+//
+// Both cards live in the same Interbank app and render Movimientos identically,
+// so they share one extraction prompt — only the `card` value written to BQ differs.
+
+// Maps the UI card key to the exact `card` value stored in BigQuery.
+const CARDS = {
+  amex:   'Interbank AMEX 6765',
+  premia: 'Interbank Premia',
+};
 
 const MONTH_MAP = {
   'Ene':'01','Feb':'02','Mar':'03','Abr':'04',
@@ -56,10 +65,11 @@ export default async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not set in Vercel env vars' });
 
-  const { images, year = new Date().getFullYear() } = req.body;
+  const { images, year = new Date().getFullYear(), card = 'amex' } = req.body;
   if (!images?.length) return res.status(400).json({ error: 'No images provided' });
 
-  const CARD = 'Interbank AMEX 6765';
+  const CARD = CARDS[card];
+  if (!CARD) return res.status(400).json({ error: `Unknown card "${card}" — expected one of: ${Object.keys(CARDS).join(', ')}` });
   const allRaw = [];
   const debugLog = [];
 

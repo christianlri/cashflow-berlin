@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Palette · Interbank AMEX</title>
+  <title>Palette · Interbank</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -41,8 +41,13 @@
     main { padding: 20px 16px 60px; max-width: 680px; margin: 0 auto; }
 
     /* ── CARD BANNER ── */
+    .card-picker { display: flex; gap: 8px; flex-wrap: wrap; }
     .card-banner { background: var(--ink); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 4px; display: flex; align-items: center; gap: 16px; }
+    .card-banner.selectable { flex: 1 1 220px; cursor: pointer; border: 2px solid transparent; opacity: 0.4; transition: opacity 0.15s, border-color 0.15s; }
+    .card-banner.selectable:hover { opacity: 0.7; }
+    .card-banner.selectable.active { opacity: 1; border-color: var(--violet); }
     .card-logo { width: 40px; height: 26px; background: #007bc1; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-logo.premia { background: #00953B; }
     .card-logo svg { width: 32px; }
     .card-info-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
     .card-info-value { font-size: 14px; color: white; font-weight: 600; margin-top: 2px; }
@@ -158,7 +163,7 @@
   <div class="nav-links">
     <a href="/palette"    class="nav-link"><span class="nav-link-icon">📊</span> Dashboard</a>
     <a href="/clasificar" class="nav-link"><span class="nav-link-icon">🏦</span> N26</a>
-    <a href="/amex"       class="nav-link active"><span class="nav-link-icon">💳</span> Interbank AMEX</a>
+    <a href="/amex"       class="nav-link active"><span class="nav-link-icon">💳</span> Interbank</a>
     <a href="/despensa"   class="nav-link"><span class="nav-link-icon">🛒</span> Despensa</a>
   </div>
 </nav>
@@ -174,7 +179,7 @@
         <div class="logo-name">Palette</div>
       </a>
     </div>
-    <div class="header-page">Interbank AMEX</div>
+    <div class="header-page">Interbank</div>
   </div>
 </header>
 
@@ -182,16 +187,30 @@
   <!-- Card info banner -->
   <div style="margin-bottom:16px">
     <div class="section-label">Tarjeta</div>
-    <div class="card-banner">
-      <div class="card-logo">
-        <!-- American Express icon -->
-        <svg viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="2" y="22" font-family="Arial" font-size="14" font-weight="900" fill="white">AMEX</text>
-        </svg>
+    <div class="card-picker">
+      <div class="card-banner selectable active" id="cardOpt-amex" onclick="selectCard('amex')">
+        <div class="card-logo">
+          <!-- American Express icon -->
+          <svg viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="2" y="22" font-family="Arial" font-size="14" font-weight="900" fill="white">AMEX</text>
+          </svg>
+        </div>
+        <div>
+          <div class="card-info-label">Interbank Peru</div>
+          <div class="card-info-value">American Express · 6765</div>
+        </div>
       </div>
-      <div>
-        <div class="card-info-label">Interbank Peru</div>
-        <div class="card-info-value">American Express · 6765</div>
+
+      <div class="card-banner selectable" id="cardOpt-premia" onclick="selectCard('premia')">
+        <div class="card-logo premia">
+          <svg viewBox="0 0 50 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="2" y="21" font-family="Arial" font-size="9" font-weight="900" fill="white">PREMIA</text>
+          </svg>
+        </div>
+        <div>
+          <div class="card-info-label">Interbank Peru</div>
+          <div class="card-info-value">Premia</div>
+        </div>
       </div>
     </div>
   </div>
@@ -200,7 +219,7 @@
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
     <div class="upload-icon">📸</div>
     <div class="upload-title">Arrastra screenshots o click para seleccionar</div>
-    <div class="upload-sub">Interbank app → Mi tarjeta → Movimientos · Acepta varios JPEGs a la vez</div>
+    <div class="upload-sub">Interbank app → American Express → Movimientos · Acepta varios JPEGs a la vez</div>
     <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png" multiple />
   </div>
   <div class="error-box" id="errorBox"></div>
@@ -304,11 +323,52 @@ function formatCurrency(amount, currency) {
   return `€${abs.toFixed(2)}`;
 }
 
+// ── Cards (keys must match CARDS in api/amex.js) ─────────────────────────────
+const CARDS = {
+  amex:   { short: 'AMEX 6765', hint: 'Interbank app → American Express → Movimientos' },
+  premia: { short: 'Premia',    hint: 'Interbank app → Premia → Movimientos' },
+};
+
 // ── State ────────────────────────────────────────────────────────────────────
 let parsedRows    = [];
 let vendorMap     = {};
 let rowStates     = [];
 let currentFilter = 'all';
+let currentCard   = 'amex';
+
+// Switching cards discards the current batch — a single load must not mix cards,
+// since every row is inserted under one card name.
+function selectCard(key) {
+  if (key === currentCard || !CARDS[key]) return;
+  currentCard = key;
+  Object.keys(CARDS).forEach(k => {
+    document.getElementById(`cardOpt-${k}`).classList.toggle('active', k === currentCard);
+  });
+  resetAll();
+}
+
+function resetAll() {
+  parsedRows    = [];
+  rowStates     = [];
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  document.getElementById('classifySection').style.display = 'none';
+  document.getElementById('bottomBar').style.display       = 'none';
+  document.getElementById('dupBox').style.display          = 'none';
+
+  // loadToDb() sets these inline for the "all duplicates" case — clear them so a
+  // later success doesn't inherit the amber styling.
+  const msg = document.getElementById('resultMsg');
+  msg.style.display = 'none';
+  msg.style.background = msg.style.borderColor = msg.style.color = '';
+
+  const btn = document.getElementById('loadBtn');
+  btn.disabled  = false;
+  btn.innerHTML = 'Cargar a BigQuery';
+
+  showError('');
+  resetUploadZone();
+}
 
 // ── Load vendor map from BigQuery on page load ────────────────────────────────
 async function loadVendorMap() {
@@ -355,7 +415,7 @@ async function handleFiles(files) {
       const res = await fetch(AMEX_API, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ images: [{ name: file.name, data: b64 }] }),
+        body:    JSON.stringify({ images: [{ name: file.name, data: b64 }], card: currentCard }),
       });
 
       if (!res.ok) {
@@ -412,7 +472,7 @@ function resetUploadZone() {
   uploadZone.innerHTML = `
     <div class="upload-icon">📸</div>
     <div class="upload-title">Arrastra screenshots o click para seleccionar</div>
-    <div class="upload-sub">Interbank app → Mi tarjeta → Movimientos · Acepta varios JPEGs a la vez</div>
+    <div class="upload-sub">${CARDS[currentCard].hint} · Acepta varios JPEGs a la vez</div>
     <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png" multiple />`;
   document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
 }
@@ -458,7 +518,7 @@ function renderRows() {
       <div class="tx-row ${state} fade-in" id="row-${i}">
         <div>
           <div class="tx-date">${r.date}</div>
-          <div class="tx-card-label">AMEX 6765</div>
+          <div class="tx-card-label">${CARDS[currentCard].short}</div>
         </div>
         <div style="min-width:0">
           <div class="tx-vendor" title="${r.commerce}">${r.commerce}</div>
