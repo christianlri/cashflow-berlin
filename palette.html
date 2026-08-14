@@ -470,11 +470,15 @@ const API_URL = '/api/transactions';
 const INCOME_TARGET = 5136;
 const TCF_TARGET    = 1776;
 
+// Recalibrados 2026-08-13 contra el gasto real neto de feb-jul 2026.
+// Suman 3.695 €/mes; con un ingreso medio de 4.892 € eso implica ahorrar ~1.197 €/mes.
 const CATEGORY_TARGETS = {
-  Rent: -1800, Network: -100, Transport: -120, 'Non Food Groceries': -40,
-  Housing: -100, Health: -80, Hair: 0, Parking: 0, Groceries: -360,
-  Subscription: -50, Services: -20, Food: -200, Trip: -200, Tech: -40,
-  Pet: -20, Other: -50, Delivery: -80, Clothing: -100,
+  Rent: -1800, Groceries: -360, Trip: -300, Food: -240,
+  Transport: -125, Delivery: -100, Other: -100, Subscription: -100,
+  Services: -100, Clothing: -90, Network: -90, Housing: -70,
+  Entertainment: -70, 'Online Shopping': -50, Health: -50,
+  'Non Food Groceries': -30, Tech: -20,
+  Pet: 0, Hair: 0, Parking: 0,
 };
 
 const LIFE_UNITS = [
