@@ -355,65 +355,6 @@
     .cat-tx-date   { font-size: 10px; color: var(--ink-muted); margin-top: 1px; font-weight: 400; }
     .cat-tx-amount { font-size: 12px; font-weight: 700; color: var(--red); white-space: nowrap; flex-shrink: 0; }
 
-    /* ── MATRIZ P&L ── */
-    .matrix-head {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; margin: 20px 0 10px;
-    }
-    .matrix-head .section-label { margin: 0; }
-    .var-toggle { display: flex; background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 2px; flex-shrink: 0; }
-    .var-toggle button {
-      background: none; border: none; cursor: pointer; font-family: 'Outfit', sans-serif;
-      font-size: 11px; font-weight: 700; color: var(--ink-muted);
-      padding: 4px 12px; border-radius: 16px; transition: all 0.15s;
-    }
-    .var-toggle button.active { background: var(--grad); color: white; }
-
-    .matrix-wrap {
-      background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden;
-    }
-    .matrix-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .matrix-scroll::-webkit-scrollbar { height: 6px; }
-    .matrix-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    table.matrix { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-size: 11px; }
-    table.matrix th, table.matrix td { padding: 7px 9px; white-space: nowrap; text-align: right; }
-    table.matrix thead th {
-      position: sticky; top: 0; z-index: 2;
-      background: var(--bg); color: var(--ink-muted);
-      font-size: 9px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-    }
-    table.matrix th.cat-col, table.matrix td.cat-col {
-      position: sticky; left: 0; z-index: 3;
-      background: var(--white); text-align: left;
-      font-weight: 600; color: var(--ink);
-      max-width: 132px; overflow: hidden; text-overflow: ellipsis;
-      box-shadow: 1px 0 0 var(--border);
-    }
-    table.matrix thead th.cat-col { z-index: 4; background: var(--bg); }
-    table.matrix tbody tr:hover td { background: var(--grad-soft); }
-    table.matrix tbody tr:hover td.cat-col { background: #faf9fd; }
-    table.matrix td { color: var(--ink-soft); font-weight: 500; font-variant-numeric: tabular-nums; }
-    table.matrix td.sel { background: rgba(123,114,192,0.09); font-weight: 700; color: var(--ink); }
-    table.matrix thead th.sel { background: rgba(123,114,192,0.16); color: var(--blue); }
-    table.matrix td.zero { color: var(--ink-muted); opacity: 0.45; }
-    table.matrix td.pos { color: var(--green); font-weight: 700; }
-    table.matrix td.neg { color: var(--red); font-weight: 700; }
-    table.matrix td.tgt { color: var(--ink-muted); font-weight: 600; }
-    table.matrix .sep { box-shadow: inset 1px 0 0 var(--border); }
-    table.matrix tr.grp td, table.matrix tr.grp td.cat-col {
-      background: var(--bg); font-weight: 800; color: var(--ink);
-      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    }
-    table.matrix tr.net td, table.matrix tr.net td.cat-col {
-      background: var(--ink); color: white; font-weight: 800;
-      box-shadow: none;
-    }
-    table.matrix tr.net td.pos { color: #4ade80; }
-    table.matrix tr.net td.neg { color: #fca5a5; }
-    .matrix-note { font-size: 10px; color: var(--ink-muted); font-weight: 400; padding: 9px 12px; border-top: 1px solid var(--border); line-height: 1.5; }
-
     /* ── FOOTER ── */
     footer {
       text-align: center;
@@ -462,6 +403,7 @@
   </div>
   <div class="nav-links">
     <a href="/palette"    class="nav-link active"><span class="nav-link-icon">📊</span> Dashboard</a>
+    <a href="/pl"         class="nav-link"><span class="nav-link-icon">📑</span> P&amp;L</a>
     <a href="/clasificar" class="nav-link"><span class="nav-link-icon">🏦</span> N26</a>
     <a href="/amex"       class="nav-link"><span class="nav-link-icon">💳</span> Interbank</a>
     <a href="/despensa"   class="nav-link"><span class="nav-link-icon">🛒</span> Despensa</a>
@@ -519,40 +461,18 @@
   <div class="section-label">Por categoría</div>
   <div class="cat-list fade-in" id="catList"></div>
 
-  <div class="matrix-head">
-    <div class="section-label">P&amp;L mensual</div>
-    <div class="var-toggle" id="varToggle">
-      <button class="active" onclick="setVarMode('abs')">€</button>
-      <button onclick="setVarMode('pct')">%</button>
-    </div>
-  </div>
-  <div class="matrix-wrap fade-in" id="plMatrix"></div>
-
-  <div class="matrix-head">
-    <div class="section-label">Por tarjeta</div>
-  </div>
-  <div class="matrix-wrap fade-in" id="cardMatrix"></div>
-
 </main>
 
 <footer>Palette · spark-datahub · BigQuery</footer>
 
+<script src="/targets.js"></script>
 <script>
 const API_URL = '/api/transactions';
 
-const INCOME_TARGET = 5136;
-const TCF_TARGET    = 1776;
-
-// Recalibrados 2026-08-13 contra el gasto real neto de feb-jul 2026.
-// Suman 3.695 €/mes; con un ingreso medio de 4.892 € eso implica ahorrar ~1.197 €/mes.
-const CATEGORY_TARGETS = {
-  Rent: -1800, Groceries: -360, Trip: -300, Food: -240,
-  Transport: -125, Delivery: -100, Other: -100, Subscription: -100,
-  Services: -100, Clothing: -90, Network: -90, Housing: -70,
-  Entertainment: -70, 'Online Shopping': -50, Health: -50,
-  'Non Food Groceries': -30, Tech: -20,
-  Pet: 0, Hair: 0, Parking: 0,
-};
+// Targets y meta de ingreso viven en /targets.js, compartidos con /pl.
+const CATEGORY_TARGETS = window.CATEGORY_TARGETS || {};
+const INCOME_TARGET    = window.INCOME_TARGET    || 5136;
+const TCF_TARGET       = 1776;
 
 const LIFE_UNITS = [
   { key: 'Groceries', emoji: '🛒', label: 'idas al súper',    avgEur: 45 },
@@ -639,8 +559,6 @@ function renderAll() {
   renderLifeUnits(data);
   renderPL(data);
   renderCategories(data);
-  renderPLMatrix();
-  renderCardMatrix();
 }
 
 // ── SUMMARY CACHE (one call per month per session) ───────────────────────────
@@ -909,200 +827,6 @@ function renderCategories(data) {
   }).join('');
 }
 
-// ── MATRIZ P&L MENSUAL ───────────────────────────────────────────────────────
-// Todos los meses en columnas + 4 columnas de análisis del mes seleccionado.
-// Convención: gasto en positivo (neto de reembolsos), ingreso y neto en su signo real.
-
-let varMode = 'abs';   // 'abs' = euros · 'pct' = porcentaje
-
-function setVarMode(mode) {
-  varMode = mode;
-  document.querySelectorAll('#varToggle button').forEach((b, i) =>
-    b.classList.toggle('active', (i === 0) === (mode === 'abs')));
-  renderPLMatrix();
-  renderCardMatrix();
-}
-
-// Los meses van del más viejo al más nuevo para leer la evolución de izquierda a derecha.
-function matrixMonths() { return [...months].sort(); }
-
-// Ventana del promedio: los N meses cerrados hasta el mes seleccionado inclusive.
-// Son los mismos 6 meses con los que se calibraron los targets, para que 'vs Prom'
-// y 'vs Target' hablen del mismo período. El mes en curso está incompleto y no promedia.
-const AVG_WINDOW = 6;
-function currentYM() { return new Date().toISOString().slice(0, 7); }
-function avgMonths() {
-  const cur    = currentYM();
-  const closed = matrixMonths().filter(m => m !== cur);
-  const upTo   = closed.filter(m => m <= selectedMonth);
-  const pool   = upTo.length ? upTo : closed;
-  return pool.slice(-AVG_WINDOW);
-}
-
-function rowMonth(r) { return (r.month?.value || r.month || '').slice(0, 7); }
-
-// Agrega allData en { clave → { mes → importe } }. keyFn decide si agrupamos por
-// categoría o por tarjeta; income=true suma solo ingresos, sin invertir el signo.
-function aggregate(keyFn, { income = false } = {}) {
-  const out = {};
-  allData.forEach(r => {
-    const m = rowMonth(r);
-    if (!m) return;
-    const isIncome = r.finance_category === '1. Earnings Net' || r.category === 'Income';
-    if (income !== isIncome) return;
-    if (!income && r.finance_category === 'Not Considered') return;
-    if (!income && !r.category) return;
-    const key = keyFn(r);
-    if (!key) return;
-    const eur = parseFloat(r.eur_amount) || 0;
-    out[key] = out[key] || {};
-    out[key][m] = (out[key][m] || 0) + (income ? eur : -eur);
-  });
-  return out;
-}
-
-function fmtEur(v, { signed = false } = {}) {
-  const n = Math.round(v);
-  if (n === 0) return '—';
-  const s = Math.abs(n).toLocaleString('de-DE');
-  return `${n < 0 ? '−' : signed ? '+' : ''}${s}`;
-}
-
-// Celda de variación. `good` indica si subir es bueno (ingreso) o malo (gasto).
-function varCell(actual, ref, good, extraClass = '') {
-  if (ref === null || ref === undefined) return `<td class="zero ${extraClass}">—</td>`;
-  const diff = actual - ref;
-  if (Math.round(diff) === 0) return `<td class="zero ${extraClass}">—</td>`;
-  let txt;
-  if (varMode === 'pct') {
-    // Un % contra una referencia ~0 o de signo contrario no significa nada.
-    if (Math.abs(ref) < 1) return `<td class="zero ${extraClass}">n/a</td>`;
-    if ((ref < 0) !== (actual < 0)) return `<td class="zero ${extraClass}">n/a</td>`;
-    const pct = (diff / Math.abs(ref)) * 100;
-    txt = `${pct > 0 ? '+' : '−'}${Math.abs(pct) >= 999 ? '999' : Math.abs(pct).toFixed(0)}%`;
-  } else {
-    txt = fmtEur(diff, { signed: true });
-  }
-  const favorable = good ? diff > 0 : diff < 0;
-  return `<td class="${favorable ? 'pos' : 'neg'} ${extraClass}">${txt}</td>`;
-}
-
-// Renderiza una tabla: filas = líneas, columnas = meses + MoM / vs Prom / vs Target / Target.
-function matrixHTML(lines, note, { showTarget = true } = {}) {
-  const ms   = matrixMonths();
-  const avgM = avgMonths();
-  const sel  = selectedMonth;
-  const prev = ms[ms.indexOf(sel) - 1] ?? null;
-
-  const head = `
-    <thead><tr>
-      <th class="cat-col">Línea</th>
-      ${ms.map(m => `<th class="${m === sel ? 'sel' : ''}">${formatMonth(m)}</th>`).join('')}
-      <th class="sep">MoM</th>
-      <th>vs Prom</th>
-      ${showTarget ? '<th>vs Target</th><th>Target</th>' : ''}
-    </tr></thead>`;
-
-  const body = lines.map(l => {
-    const v      = m => l.values[m] || 0;
-    const selVal = v(sel);
-    const avg    = avgM.reduce((a, m) => a + v(m), 0) / (avgM.length || 1);
-    const hasTgt = l.target !== null && l.target !== undefined;
-
-    return `
-      <tr class="${l.rowClass || ''}">
-        <td class="cat-col">${l.label}</td>
-        ${ms.map(m => {
-          const val = v(m);
-          const cls = [m === sel ? 'sel' : '', Math.round(val) === 0 ? 'zero' : ''].join(' ');
-          return `<td class="${cls}">${fmtEur(val)}</td>`;
-        }).join('')}
-        ${varCell(selVal, prev !== null ? v(prev) : null, !!l.goodWhenHigh, 'sep')}
-        ${varCell(selVal, avg, !!l.goodWhenHigh)}
-        ${showTarget ? `${hasTgt ? varCell(selVal, l.target, !!l.goodWhenHigh) : '<td class="zero">—</td>'}
-        <td class="tgt">${hasTgt ? fmtEur(l.target) : '—'}</td>` : ''}
-      </tr>`;
-  }).join('');
-
-  return `<div class="matrix-scroll"><table class="matrix">${head}<tbody>${body}</tbody></table></div>
-          ${note ? `<div class="matrix-note">${note}</div>` : ''}`;
-}
-
-function renderPLMatrix() {
-  const ms      = matrixMonths();
-  const byCat   = aggregate(r => r.category);
-  const income  = aggregate(() => 'Ingreso', { income: true });
-  const catKeys = new Set([...Object.keys(byCat), ...Object.keys(CATEGORY_TARGETS)]);
-
-  const totalTarget = Object.values(CATEGORY_TARGETS).reduce((a, b) => a + Math.abs(b), 0);
-  const sum = keys => {
-    const o = {};
-    ms.forEach(m => { o[m] = keys.reduce((a, k) => a + ((byCat[k] || {})[m] || 0), 0); });
-    return o;
-  };
-
-  const catLines = Array.from(catKeys)
-    .map(c => ({
-      label:  c,
-      values: byCat[c] || {},
-      target: Math.abs(CATEGORY_TARGETS[c] || 0) || null,
-    }))
-    .filter(l => l.target || ms.some(m => Math.round(l.values[m] || 0) !== 0))
-    .sort((a, b) => {
-      const tot = l => ms.reduce((acc, m) => acc + (l.values[m] || 0), 0);
-      return tot(b) - tot(a);
-    });
-
-  const gastoValues = sum(Array.from(catKeys));
-  const incomeVals  = income['Ingreso'] || {};
-  const netoValues  = {};
-  ms.forEach(m => { netoValues[m] = (incomeVals[m] || 0) - (gastoValues[m] || 0); });
-
-  const lines = [
-    { label: 'Ingreso', values: incomeVals, target: INCOME_TARGET, goodWhenHigh: true, rowClass: 'grp' },
-    ...catLines,
-    { label: 'Gasto total', values: gastoValues, target: totalTarget, rowClass: 'grp' },
-    { label: 'Neto', values: netoValues, target: INCOME_TARGET - totalTarget, goodWhenHigh: true, rowClass: 'net' },
-  ];
-
-  const avgM = avgMonths();
-  const note = `Gasto neto de reembolsos, sin <em>Not Considered</em>. Verde = favorable.
-    <strong>vs Prom</strong> compara ${formatMonth(selectedMonth)} contra los ${avgM.length}
-    meses cerrados hasta ${formatMonth(avgM[avgM.length - 1])}.
-    ${selectedMonth === currentYM()
-      ? `<strong style="color:var(--amber)">${formatMonth(selectedMonth)} va incompleto</strong>: el mes en curso no promedia y sus comparaciones aún no son concluyentes.`
-      : ''}`;
-
-  document.getElementById('plMatrix').innerHTML = matrixHTML(lines, note);
-}
-
-function renderCardMatrix() {
-  const ms     = matrixMonths();
-  const byCard = aggregate(r => r.card);
-  const cards  = Object.keys(byCard).sort((a, b) => {
-    const tot = k => ms.reduce((acc, m) => acc + (byCard[k][m] || 0), 0);
-    return tot(b) - tot(a);
-  });
-
-  const totals = {};
-  ms.forEach(m => { totals[m] = cards.reduce((a, c) => a + (byCard[c][m] || 0), 0); });
-
-  const lines = [
-    ...cards.map(c => ({ label: c, values: byCard[c], target: null })),
-    { label: 'Total', values: totals, target: null, rowClass: 'grp' },
-  ];
-
-  const selTotal = totals[selectedMonth] || 0;
-  const share = cards
-    .map(c => ({ c, v: byCard[c][selectedMonth] || 0 }))
-    .filter(x => Math.round(x.v) !== 0)
-    .sort((a, b) => b.v - a.v)
-    .map(x => `${x.c} <strong>${Math.round((x.v / selTotal) * 100)}%</strong>`)
-    .join(' · ');
-
-  const note = `Reparto de ${formatMonth(selectedMonth)}: ${share || 'sin movimientos'}. Sin targets por tarjeta.`;
-  document.getElementById('cardMatrix').innerHTML = matrixHTML(lines, note, { showTarget: false });
-}
 
 loadData();
 

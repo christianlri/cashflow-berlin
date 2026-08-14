@@ -27,6 +27,10 @@
       "dest": "/palette.html"
     },
     {
+      "src": "/pl",
+      "dest": "/pl.html"
+    },
+    {
       "src": "/clasificar",
       "dest": "/clasificar.html"
     },
