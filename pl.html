@@ -110,6 +110,46 @@
       color: var(--ink-muted); margin: 20px 0 10px;
     }
 
+    /* ── KPI DE AHORRO ── */
+    .kpi-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
+    .kpi-tile {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+    }
+    .kpi-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--ink-muted); margin-bottom: 6px;
+    }
+    .kpi-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .kpi-tile.hero .kpi-value { font-size: 34px; }
+    .kpi-sub { font-size: 11px; color: var(--ink-muted); font-weight: 400; margin-top: 6px; }
+    .kpi-value.pos { color: var(--green); }
+    .kpi-value.neg { color: var(--red); }
+
+    /* ── GRÁFICO ── */
+    .chart-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 12px 10px; position: relative;
+    }
+    .chart-card svg { display: block; width: 100%; height: auto; }
+    .chart-legend {
+      display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+      padding: 10px 6px 0; font-size: 10px; color: var(--ink-muted); font-weight: 500;
+    }
+    .lg-item { display: flex; align-items: center; gap: 6px; }
+    .lg-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .lg-line { width: 14px; height: 0; border-top: 2px solid var(--ink); flex-shrink: 0; }
+    .chart-tip {
+      position: absolute; pointer-events: none; opacity: 0; transition: opacity 0.12s;
+      background: var(--ink); color: white; border-radius: var(--radius-sm);
+      padding: 8px 10px; font-size: 11px; line-height: 1.5; white-space: nowrap;
+      z-index: 10; transform: translate(-50%, -100%);
+    }
+    .chart-tip .tip-m { font-weight: 700; margin-bottom: 2px; }
+    .chart-tip .tip-r { color: rgba(255,255,255,0.65); }
+    .chart-tip .tip-r b { color: white; font-weight: 600; }
+    .bar-hit { cursor: pointer; }
+
     /* ── MATRIZ P&L ── */
     .matrix-head {
       display: flex; align-items: center; justify-content: space-between;
@@ -239,6 +279,16 @@
   <div class="month-tabs" id="monthTabs"></div>
   <div class="tabs-hint">El mes elegido se resalta en la tabla y alimenta las columnas de análisis.</div>
 
+  <div class="section-label">Ahorro del mes</div>
+  <div class="kpi-row fade-in" id="kpiRow"></div>
+
+  <div class="section-label">Evolución del gasto</div>
+  <div class="chart-card fade-in" id="chartCard">
+    <div id="chartSvg"></div>
+    <div class="chart-legend" id="chartLegend"></div>
+    <div class="chart-tip" id="chartTip"></div>
+  </div>
+
   <div class="matrix-head">
     <div class="section-label">P&amp;L mensual</div>
     <div class="var-toggle" id="varToggle">
@@ -312,6 +362,8 @@ function selectMonth(m) {
 }
 
 function renderAll() {
+  renderKPI();
+  renderChart();
   renderPLMatrix();
   renderCardMatrix();
 }
@@ -422,7 +474,8 @@ function matrixHTML(lines, note, { showTarget = true } = {}) {
         ${ms.map(m => {
           const val = v(m);
           const cls = [m === sel ? 'sel' : '', Math.round(val) === 0 ? 'zero' : ''].join(' ');
-          return `<td class="${cls}">${fmtEur(val)}</td>`;
+          const mark = (l.assumed || []).includes(m) ? '*' : '';
+          return `<td class="${cls}">${fmtEur(val)}${mark}</td>`;
         }).join('')}
         ${varCell(selVal, prev !== null ? v(prev) : null, !!l.goodWhenHigh, 'sep')}
         ${varCell(selVal, avg, !!l.goodWhenHigh)}
@@ -435,52 +488,215 @@ function matrixHTML(lines, note, { showTarget = true } = {}) {
           ${note ? `<div class="matrix-note">${note}</div>` : ''}`;
 }
 
-function renderPLMatrix() {
-  const ms      = matrixMonths();
-  const byCat   = aggregate(r => r.category);
-  const income  = aggregate(() => 'Ingreso', { income: true });
-  const catKeys = new Set([...Object.keys(byCat), ...Object.keys(CATEGORY_TARGETS)]);
-
+// Serie base que comparten la matriz, el KPI de ahorro y el gráfico.
+// El sueldo cae a fin de mes: mientras no esté registrado, el mes en curso
+// asume el target de ingreso. Sin esto el ahorro del mes vivo sale negativo
+// por construcción (gastos completos contra ingreso cero).
+function plSeries() {
+  const ms          = matrixMonths();
+  const byCat       = aggregate(r => r.category);
+  const catKeys     = Array.from(new Set([...Object.keys(byCat), ...Object.keys(CATEGORY_TARGETS)]));
   const totalTarget = Object.values(CATEGORY_TARGETS).reduce((a, b) => a + Math.abs(b), 0);
-  const sum = keys => {
-    const o = {};
-    ms.forEach(m => { o[m] = keys.reduce((a, k) => a + ((byCat[k] || {})[m] || 0), 0); });
-    return o;
-  };
+  const cur         = currentYM();
 
-  const catLines = Array.from(catKeys)
+  const gasto = {};
+  ms.forEach(m => { gasto[m] = catKeys.reduce((a, k) => a + ((byCat[k] || {})[m] || 0), 0); });
+
+  const income   = { ...(aggregate(() => 'Ingreso', { income: true })['Ingreso'] || {}) };
+  const assumed  = [];
+  if (ms.includes(cur) && Math.round(income[cur] || 0) === 0) {
+    income[cur] = INCOME_TARGET;
+    assumed.push(cur);
+  }
+
+  const ahorro = {};
+  ms.forEach(m => { ahorro[m] = (income[m] || 0) - (gasto[m] || 0); });
+
+  return { ms, byCat, catKeys, totalTarget, gasto, income, ahorro, assumed,
+           ahorroTarget: INCOME_TARGET - totalTarget };
+}
+
+function renderPLMatrix() {
+  const s = plSeries();
+
+  const catLines = s.catKeys
     .map(c => ({
       label:  c,
-      values: byCat[c] || {},
+      values: s.byCat[c] || {},
       target: Math.abs(CATEGORY_TARGETS[c] || 0) || null,
     }))
-    .filter(l => l.target || ms.some(m => Math.round(l.values[m] || 0) !== 0))
+    .filter(l => l.target || s.ms.some(m => Math.round(l.values[m] || 0) !== 0))
     .sort((a, b) => {
-      const tot = l => ms.reduce((acc, m) => acc + (l.values[m] || 0), 0);
+      const tot = l => s.ms.reduce((acc, m) => acc + (l.values[m] || 0), 0);
       return tot(b) - tot(a);
     });
 
-  const gastoValues = sum(Array.from(catKeys));
-  const incomeVals  = income['Ingreso'] || {};
-  const netoValues  = {};
-  ms.forEach(m => { netoValues[m] = (incomeVals[m] || 0) - (gastoValues[m] || 0); });
-
   const lines = [
-    { label: 'Ingreso', values: incomeVals, target: INCOME_TARGET, goodWhenHigh: true, rowClass: 'grp' },
+    { label: 'Ingreso', values: s.income, target: INCOME_TARGET, goodWhenHigh: true, rowClass: 'grp', assumed: s.assumed },
     ...catLines,
-    { label: 'Gasto total', values: gastoValues, target: totalTarget, rowClass: 'grp' },
-    { label: 'Neto', values: netoValues, target: INCOME_TARGET - totalTarget, goodWhenHigh: true, rowClass: 'net' },
+    { label: 'Gasto total', values: s.gasto, target: s.totalTarget, rowClass: 'grp' },
+    { label: 'Ahorro', values: s.ahorro, target: s.ahorroTarget, goodWhenHigh: true, rowClass: 'net', assumed: s.assumed },
   ];
 
   const avgM = avgMonths();
   const note = `Gasto neto de reembolsos, sin <em>Not Considered</em>. Verde = favorable.
     <strong>vs Prom</strong> compara ${formatMonth(selectedMonth)} contra los ${avgM.length}
     meses cerrados hasta ${formatMonth(avgM[avgM.length - 1])}.
+    ${s.assumed.length
+      ? ` <strong>*</strong> ${formatMonth(s.assumed[0])} todavía no registra sueldo: se asume el target de ingreso
+          (${fmtEur(INCOME_TARGET)} €) para que el ahorro no salga falseado.`
+      : ''}
     ${selectedMonth === currentYM()
-      ? `<strong style="color:var(--amber)">${formatMonth(selectedMonth)} va incompleto</strong>: el mes en curso no promedia y sus comparaciones aún no son concluyentes.`
+      ? `<strong style="color:var(--amber)">${formatMonth(selectedMonth)} va incompleto</strong>: el mes en curso no promedia y sus gastos aún no están todos.`
       : ''}`;
 
   document.getElementById('plMatrix').innerHTML = matrixHTML(lines, note);
+}
+
+// ── KPI DE AHORRO ────────────────────────────────────────────────────────────
+function renderKPI() {
+  const s    = plSeries();
+  const real = s.ahorro[selectedMonth] || 0;
+  const tgt  = s.ahorroTarget;
+  const diff = real - tgt;
+  const isAssumed = s.assumed.includes(selectedMonth);
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-tile hero">
+      <div class="kpi-label">Ahorro ${formatMonth(selectedMonth)}</div>
+      <div class="kpi-value ${real >= 0 ? 'pos' : 'neg'}">${real < 0 ? '−' : ''}€${Math.abs(Math.round(real)).toLocaleString('de-DE')}</div>
+      <div class="kpi-sub">${isAssumed ? 'con el ingreso asumido · mes en curso' : `ingreso €${Math.round(s.income[selectedMonth] || 0).toLocaleString('de-DE')} − gasto €${Math.round(s.gasto[selectedMonth] || 0).toLocaleString('de-DE')}`}</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Target</div>
+      <div class="kpi-value">€${Math.round(tgt).toLocaleString('de-DE')}</div>
+      <div class="kpi-sub">${Math.round((tgt / INCOME_TARGET) * 100)}% del ingreso</div>
+    </div>
+    <div class="kpi-tile">
+      <div class="kpi-label">Diferencia</div>
+      <div class="kpi-value ${diff >= 0 ? 'pos' : 'neg'}">${diff >= 0 ? '+' : '−'}€${Math.abs(Math.round(diff)).toLocaleString('de-DE')}</div>
+      <div class="kpi-sub">${diff >= 0 ? 'sobre el target' : 'bajo el target'}</div>
+    </div>`;
+}
+
+// ── GRÁFICO DE EVOLUCIÓN ─────────────────────────────────────────────────────
+// Columnas = gasto total del mes · línea sólida = target. Una sola serie, así
+// que no lleva leyenda de series: los dos colores son estado (dentro/sobre el
+// target) y van rotulados. Clic en una barra selecciona el mes.
+const BAR_OK   = '#7B72C0';   // violeta Palette — dentro del target
+const BAR_OVER = '#c0392b';   // rojo — sobre el target
+const CHART = { w: 680, h: 200, padT: 18, padB: 26, padL: 44, padR: 8, maxBar: 24, r: 4 };
+
+function barPath(x, y, w, h, r) {
+  const rr = Math.min(r, h, w / 2);
+  if (h <= 0) return '';
+  // Extremo superior redondeado, base cuadrada sobre la línea de cero.
+  return `M${x},${y + h} L${x},${y + rr} Q${x},${y} ${x + rr},${y}
+          L${x + w - rr},${y} Q${x + w},${y} ${x + w},${y + rr} L${x + w},${y + h} Z`;
+}
+
+// El último tick tiene que quedar POR ENCIMA del máximo, o las barras altas
+// se dibujan fuera del área del gráfico.
+function niceTicks(max) {
+  const step = Math.pow(10, Math.floor(Math.log10(max / 3)));
+  const mult = [1, 2, 2.5, 5, 10].find(m => max / (step * m) <= 3.2) || 10;
+  const s    = step * mult;
+  const out  = [];
+  for (let v = 0; ; v += s) { out.push(v); if (v >= max) break; }
+  return out;
+}
+
+function renderChart() {
+  const s   = plSeries();
+  const ms  = s.ms;
+  const tgt = s.totalTarget;
+  const { w, h, padT, padB, padL, padR, maxBar } = CHART;
+
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const maxV  = Math.max(tgt, ...ms.map(m => s.gasto[m] || 0)) * 1.12;
+  const ticks = niceTicks(maxV);
+  const top   = ticks[ticks.length - 1];
+  const y     = v => padT + plotH - (v / top) * plotH;
+  const band  = plotW / ms.length;
+  const bw    = Math.min(maxBar, band * 0.55);
+
+  const grid = ticks.map(t => `
+    <line x1="${padL}" y1="${y(t).toFixed(1)}" x2="${w - padR}" y2="${y(t).toFixed(1)}"
+          stroke="var(--border)" stroke-width="1" />
+    <text x="${padL - 8}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end"
+          font-size="9" fill="var(--ink-muted)">${t === 0 ? '0' : (t / 1000).toFixed(t % 1000 ? 1 : 0) + 'k'}</text>`).join('');
+
+  const cur = currentYM();
+  const bars = ms.map((m, i) => {
+    const v    = s.gasto[m] || 0;
+    const x    = padL + band * i + (band - bw) / 2;
+    const bh   = Math.max(0, y(0) - y(v));
+    const over = v > tgt;
+    const sel  = m === selectedMonth;
+    // El mes en curso lleva trama: su barra es baja porque faltan días, no
+    // porque se esté gastando menos. Sin esto se lee como un mes bueno.
+    const partial = m === cur;
+    return `
+      <path d="${barPath(x, y(v), bw, bh, CHART.r)}" fill="${over ? BAR_OVER : BAR_OK}"
+            opacity="${sel ? 1 : 0.72}" />
+      ${partial ? `<path d="${barPath(x, y(v), bw, bh, CHART.r)}" fill="url(#hatch)" />` : ''}
+      ${sel ? `<text x="${(x + bw / 2).toFixed(1)}" y="${(y(v) - 6).toFixed(1)}" text-anchor="middle"
+            font-size="10" font-weight="700" fill="var(--ink)">${fmtEur(v)}</text>` : ''}
+      <text x="${(x + bw / 2).toFixed(1)}" y="${h - 8}" text-anchor="middle" font-size="9"
+            font-weight="${sel ? 700 : 500}" fill="${sel ? 'var(--ink)' : 'var(--ink-muted)'}">${formatMonth(m)}</text>
+      <rect class="bar-hit" x="${(padL + band * i).toFixed(1)}" y="${padT}" width="${band.toFixed(1)}" height="${plotH}"
+            fill="transparent" data-m="${m}" />`;
+  }).join('');
+
+  document.getElementById('chartSvg').innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" role="img"
+         aria-label="Gasto mensual contra el target de ${Math.round(tgt)} euros">
+      <defs>
+        <pattern id="hatch" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="0" y2="5" stroke="var(--white)" stroke-width="2.2" />
+        </pattern>
+      </defs>
+      ${grid}
+      ${bars}
+      <line x1="${padL}" y1="${y(tgt).toFixed(1)}" x2="${w - padR}" y2="${y(tgt).toFixed(1)}"
+            stroke="var(--ink)" stroke-width="2" stroke-linecap="round" />
+      <text x="${w - padR}" y="${(y(tgt) - 6).toFixed(1)}" text-anchor="end"
+            font-size="9" font-weight="700" fill="var(--ink)">target ${fmtEur(tgt)}</text>
+    </svg>`;
+
+  document.getElementById('chartLegend').innerHTML = `
+    <div class="lg-item"><span class="lg-swatch" style="background:${BAR_OK}"></span> Dentro del target</div>
+    <div class="lg-item"><span class="lg-swatch" style="background:${BAR_OVER}"></span> Sobre el target</div>
+    <div class="lg-item"><span class="lg-line"></span> Target ${fmtEur(tgt)} €/mes</div>
+    ${ms.includes(currentYM())
+      ? `<div class="lg-item"><span class="lg-swatch" style="background:repeating-linear-gradient(45deg,${BAR_OK},${BAR_OK} 2px,#fff 2px,#fff 4px)"></span> ${formatMonth(currentYM())} va incompleto</div>`
+      : ''}`;
+
+  const tip  = document.getElementById('chartTip');
+  const card = document.getElementById('chartCard');
+  card.querySelectorAll('.bar-hit').forEach(hit => {
+    hit.addEventListener('click', () => selectMonth(hit.dataset.m));
+    hit.addEventListener('mouseleave', () => { tip.style.opacity = '0'; });
+    hit.addEventListener('mousemove', ev => {
+      const m    = hit.dataset.m;
+      const v    = s.gasto[m] || 0;
+      const diff = v - tgt;
+      const box  = card.getBoundingClientRect();
+      tip.innerHTML = `
+        <div class="tip-m">${formatMonth(m)}</div>
+        <div class="tip-r">Gasto <b>€${Math.round(v).toLocaleString('de-DE')}</b></div>
+        <div class="tip-r">${diff > 0 ? 'Sobre' : 'Bajo'} target <b>€${Math.abs(Math.round(diff)).toLocaleString('de-DE')}</b></div>
+        <div class="tip-r">Ahorro <b>${s.ahorro[m] < 0 ? '−' : ''}€${Math.abs(Math.round(s.ahorro[m] || 0)).toLocaleString('de-DE')}</b></div>`;
+      // Se ancla al cursor pero sin salirse de la tarjeta: en los meses de los
+      // extremos, y sobre todo en móvil, si no se acota queda cortado.
+      tip.style.opacity = '1';
+      const half = tip.offsetWidth / 2;
+      const xRaw = ev.clientX - box.left;
+      tip.style.left = `${Math.max(half + 4, Math.min(box.width - half - 4, xRaw))}px`;
+      tip.style.top  = `${ev.clientY - box.top - 12}px`;
+    });
+  });
 }
 
 function renderCardMatrix() {
