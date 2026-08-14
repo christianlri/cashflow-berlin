@@ -490,6 +490,7 @@ const CAT_COLORS = {
   Trip: '#0891b2', Subscription: '#059669', Tech: '#4f46e5',
   Delivery: '#ea580c', Other: '#9a9aaa', Network: '#6b7280',
   Housing: '#92400e', 'Non Food Groceries': '#065f46', Hair: '#be185d',
+  Entertainment: '#c026d3', 'Online Shopping': '#0d9488', Services: '#a16207',
 };
 
 let allData = [], months = [], selectedMonth = null;
@@ -577,7 +578,7 @@ async function renderSummary(data) {
   card.innerHTML = `<div class="summary-loading"><div class="spinner-sm"></div>Analizando...</div>`;
 
   const FIXED_CATS  = new Set(['Rent', 'Network', 'Transport']);
-  const ONEOFF_CATS = new Set(['Trip', 'Clothing', 'Tech', 'Christmas Deco']);
+  const ONEOFF_CATS = new Set(['Trip', 'Clothing', 'Tech', 'Christmas Deco', 'Online Shopping']);
 
   const today          = new Date();
   const todayStr       = today.toISOString().slice(0, 10);
@@ -613,7 +614,7 @@ async function renderSummary(data) {
     categorySpend[r.category] -= eur;
   });
 
-  const FOCUS_CATS = ['Groceries','Delivery','Food','Transport','Health','Clothing','Subscription','Trip','Network','Other'];
+  const FOCUS_CATS = ['Groceries','Delivery','Food','Transport','Health','Clothing','Subscription','Trip','Network','Entertainment','Online Shopping','Services','Other'];
 
   const categoryLines = FOCUS_CATS.map(cat => {
     const spent  = Math.round(categorySpend[cat] || 0);

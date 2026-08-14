@@ -273,12 +273,15 @@ const CATEGORY_MAP = {
   'Rent':               { finance_category: '2. Foundational Margin',    finance_class: 'Expected Rent'           },
   'Clothing':           { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Christmas Deco':     { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Entertainment':      { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Online Shopping':    { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Other':              { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Tech':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Trip':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Housing':            { finance_category: '3. Vital Surplus',          finance_class: 'Extra & One-Offs'        },
   'Income':             { finance_category: '1. Earnings Net',           finance_class: ''                        },
   'Finance':            { finance_category: 'Not Considered',            finance_class: 'Not Considered'          },
+  'Not Considered':     { finance_category: 'Not Considered',            finance_class: 'Not Considered'          },
 };
 const ALL_CATEGORIES = Object.keys(CATEGORY_MAP);
 
@@ -289,14 +292,15 @@ const INFERENCE_RULES = [
   { kw: ['le crobag', 'ben rahim', 'kuchi', 'amrit', 'burger king', 'mcdonald', 'starbucks', 'kamps', 'nordsee', 'backwerk', 'ditsch', 'barist', 'restaurant', 'cafe', '3cpayment', 'hackescher'], cat: 'Food' },
   { kw: ['bvg', 'berliner verkehr', 'bolt', 'lime', 'tier', 'tfl', 'uber trip', 'db retorno'], cat: 'Transport' },
   { kw: ['apotheke', 'mediserv', 'urban sports', 'vitapoint', 'docortho'], cat: 'Health' },
-  { kw: ['openai', 'chatgpt', 'spotify', 'netflix', 'audible', 'claude.ai', 'proton', 'apple.com/bill', 'suno', 'wolt plus'], cat: 'Subscription' },
+  { kw: ['openai', 'chatgpt', 'spotify', 'netflix', 'audible', 'claude.ai', 'proton', 'apple.com/bill', 'suno', 'wolt plus', 'amznprime', 'amazon prime'], cat: 'Subscription' },
   { kw: ['zara', 'kg zara', 'uniqlo', 'h&m', 'decathlon', 'zalando', 'tk maxx', 'sephora'], cat: 'Clothing' },
   { kw: ['mediamarkt', 'samsung', 'anthropic'], cat: 'Tech' },
   { kw: ['movistar', 'telefonica', 'vodafone', 'gocardless'], cat: 'Network' },
   { kw: ['ikea', 'bauhaus', 'obi', 'hornbach'], cat: 'Housing' },
   { kw: ['museum', 'easyjet', 'ryanair', 'ibis', 'abbey road', 'caba'], cat: 'Trip' },
   { kw: ['seguro', 'desgravamen', 'revolut', 'wise', 'cash26', 'rundfunk', 'pago tarj', 'main account'], cat: 'Finance' },
-  { kw: ['amzn mktp', 'amazon'], cat: 'Other' },
+  { kw: ['uci ', 'multiplex', 'zoo palast', 'zoopalast', 'cineplanet', 'cinemark', 'cinepolis', 'theater', 'eventim', 'timebandits', 'premium entertainm', 'dazn'], cat: 'Entertainment' },
+  { kw: ['amzn mktp', 'amazon', 'kindle svcs', 'temu', 'catawiki', 'aliexpress', 'shein'], cat: 'Online Shopping' },
 ];
 
 function inferCategory(merchant) {

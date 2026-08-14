@@ -76,6 +76,25 @@ Upload N26 CSV exports. Transactions are classified and inserted into BigQuery v
 
 ---
 
+## Categorías
+
+`CATEGORY_MAP` (categoría → `finance_class` + `finance_category`) está duplicado en cuatro
+sitios y los cuatro tienen que quedar idénticos al agregar una categoría:
+
+- `api/classify.js` — **fuente de verdad**, es la que escribe en BQ
+- `clasificar.html`, `amex.html` — copias para la UI
+- `scripts/interbank_parse.py`
+
+Además hay que dar de alta la categoría nueva en `palette.html` (`CATEGORY_TARGETS`,
+`CAT_COLORS`, `FOCUS_CATS`, y `ONEOFF_CATS` si es gasto irregular) o no aparece en el
+dashboard, y en el nodo `Match Categories` del n8n.
+
+Una categoría que no esté en `CATEGORY_MAP` ya no desaparece del P&L: cae en el bucket de
+`Other` (`5. True Cash Flow` / `Extra & One-Offs`) y `/api/classify` la devuelve en
+`warnings`. Antes caía en `Not Considered` en silencio.
+
+---
+
 ## BigQuery Table Schema (`data_bank_native`)
 
 | Field | Type |
@@ -172,6 +191,8 @@ const INFERENCE_RULES = [
   { kw: ['openai', 'chatgpt', 'spotify', 'netflix', 'audible', 'proton', 'apple.com/bill', 'claude.ai'], cat: 'Subscription' },
   { kw: ['zara', 'uniqlo', 'h&m', 'decathlon', 'zalando', 'tk maxx'], cat: 'Clothing' },
   { kw: ['mediamarkt', 'samsung', 'anthropic'], cat: 'Tech' },
+  { kw: ['uci ', 'multiplex', 'zoo palast', 'cineplanet', 'cinemark', 'theater', 'eventim', 'dazn'], cat: 'Entertainment' },
+  { kw: ['amzn mktp', 'amazon', 'kindle svcs', 'temu', 'catawiki'], cat: 'Online Shopping' },
   { kw: ['ikea', 'bauhaus', 'obi', 'hornbach'], cat: 'Housing' },
   { kw: ['easyjet', 'ryanair', 'ibis'], cat: 'Trip' },
   { kw: ['seguro', 'desgravamen', 'revolut', 'wise', 'pago tarj'], cat: 'Finance' },

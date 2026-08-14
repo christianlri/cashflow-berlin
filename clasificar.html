@@ -222,6 +222,8 @@ const CATEGORY_MAP = {
   'Rent':               { finance_category: '2. Foundational Margin',    finance_class: 'Expected Rent'           },
   'Clothing':           { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Christmas Deco':     { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Entertainment':      { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Online Shopping':    { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Other':              { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Tech':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Trip':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
@@ -238,7 +240,7 @@ const INFERENCE_RULES = [
   { keywords: ['kuchi', 'amrit', 'burger king', 'mcdonald', 'starbucks', 'kamps', 'nordsee', 'peter pane', 'ramen', 'sushi', 'ben rahim', 'kilkenny', 'backwerk', 'ditsch', 'barist', 'lsp*', 'hard rock', 'restaurant', 'cafe'], cat: 'Food' },
   { keywords: ['bvg', 'berliner verkehr', 'bolt', 'lime', 'tier', 'navigo', 'tfl', 'db retorno'], cat: 'Transport' },
   { keywords: ['apotheke', 'mediserv', 'urban sports', 'docortho', 'ap solutions', 'mediosap'], cat: 'Health' },
-  { keywords: ['apple.com/bill', 'spotify', 'netflix', 'audible', 'ring', 'openai', 'suno', 'wolt plus', 'n26 subscription', 'claude.ai', 'proton'], cat: 'Subscription' },
+  { keywords: ['apple.com/bill', 'spotify', 'netflix', 'audible', 'ring', 'openai', 'suno', 'wolt plus', 'n26 subscription', 'claude.ai', 'proton', 'amznprime', 'amazon prime'], cat: 'Subscription' },
   { keywords: ['decathlon', 'zalando', 'tk maxx', 'uniqlo', 'corporate benefits', 'sephora'], cat: 'Clothing' },
   { keywords: ['mediamarkt', 'samsung', 'anthropic'], cat: 'Tech' },
   { keywords: ['jasmin haug'], cat: 'Rent' },
@@ -247,6 +249,8 @@ const INFERENCE_RULES = [
   { keywords: ['delivery hero se'], cat: 'Income' },
   { keywords: ['francisco del valle', 'jose enrique', 'christian la rosa', 'christian jesus', 'revolut', 'wise', 'cash26', 'n26 cash', 'rundfunk', 'landesamt', 'international baptist', 'main account', 'chris & meli'], cat: 'Finance' },
   { keywords: ['museum', 'ibis', 'abbey road', 'easyjet', 'ryanair', 'caba istanbul', 'service navigo', 'natural history', 'ziggo', 'laduree', 'haagen', 'tulip'], cat: 'Trip' },
+  { keywords: ['uci ', 'multiplex', 'zoo palast', 'zoopalast', 'cineplanet', 'cinemark', 'cinepolis', 'theater', 'eventim', 'timebandits', 'premium entertainm', 'dazn'], cat: 'Entertainment' },
+  { keywords: ['amzn mktp', 'amazon', 'kindle svcs', 'temu', 'catawiki', 'aliexpress', 'shein'], cat: 'Online Shopping' },
 ];
 
 function inferCategory(vendor) {

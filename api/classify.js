@@ -23,13 +23,21 @@ const CATEGORY_MAP = {
   'Rent':                { finance_category: '2. Foundational Margin',    finance_class: 'Expected Rent'           },
   'Clothing':            { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Christmas Deco':      { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Entertainment':       { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
+  'Online Shopping':     { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Other':               { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Tech':                { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Trip':                { finance_category: '5. True Cash Flow',         finance_class: 'Extra & One-Offs'        },
   'Housing':             { finance_category: '3. Vital Surplus',          finance_class: 'Extra & One-Offs'        },
   'Income':              { finance_category: '1. Earnings Net',           finance_class: ''                        },
   'Finance':             { finance_category: 'Not Considered',            finance_class: 'Not Considered'           },
+  'Not Considered':      { finance_category: 'Not Considered',            finance_class: 'Not Considered'           },
 };
+
+// Fallback para categorías que no estén en el mapa. Antes caía en 'Not Considered',
+// lo que sacaba la fila del P&L sin avisar. Ahora cae en el bucket de 'Other' y se
+// reporta en la respuesta como warning.
+const FALLBACK_MAPPING = { finance_category: '5. True Cash Flow', finance_class: 'Extra & One-Offs' };
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_MAP);
 
@@ -141,8 +149,10 @@ export default async function handler(req, res) {
         return res.status(200).json({ inserted: 0, skipped: skippedRows.length, skippedRows });
       }
 
+      const unmapped = [...new Set(newRows.map(r => r.category).filter(c => !CATEGORY_MAP[c]))];
+
       const toInsert = newRows.map(r => {
-        const mapping = CATEGORY_MAP[r.category] || { finance_category: 'Not Considered', finance_class: 'Not Considered' };
+        const mapping = CATEGORY_MAP[r.category] || FALLBACK_MAPPING;
         const amounts = computeAmounts(r.eur_amount, r.currency, r.original_amount);
         return {
           date: r.date,
@@ -164,7 +174,12 @@ export default async function handler(req, res) {
       });
 
       await table.insert(toInsert);
-      return res.status(200).json({ inserted: toInsert.length, skipped: skippedRows.length, skippedRows });
+      return res.status(200).json({
+        inserted: toInsert.length,
+        skipped: skippedRows.length,
+        skippedRows,
+        ...(unmapped.length ? { warnings: [`Categorías sin mapeo, cargadas como Extra & One-Offs: ${unmapped.join(', ')}`] } : {}),
+      });
     } catch (e) {
       return res.status(500).json({ error: e.message, details: e.errors });
     }
