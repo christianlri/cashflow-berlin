@@ -154,6 +154,8 @@ export default async function handler(req, res) {
 
       const unmapped = [...new Set(newRows.map(r => r.category).filter(c => !CATEGORY_MAP[c]))];
 
+      const loadedAt = new Date().toISOString();
+
       const toInsert = newRows.map(r => {
         const mapping = CATEGORY_MAP[r.category] || FALLBACK_MAPPING;
         const amounts = computeAmounts(r.eur_amount, r.currency, r.original_amount);
@@ -173,6 +175,9 @@ export default async function handler(req, res) {
           week: getWeek(r.date),
           finance_class: mapping.finance_class,
           finance_category: mapping.finance_category,
+          // Momento de la carga, para poder auditar o revertir un batch entero.
+          // NULL = fila cargada antes de que existiera esta columna.
+          loaded_at: loadedAt,
         };
       });
 

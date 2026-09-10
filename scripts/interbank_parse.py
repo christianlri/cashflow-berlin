@@ -280,6 +280,8 @@ def deduplicate(transactions: list) -> list:
 # ── Build BigQuery rows ────────────────────────────────────────────────────────
 
 def build_rows(transactions: list, year: int = 2026) -> list:
+    # Mismo timestamp para todo el batch: permite revertir una carga entera.
+    loaded_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
     rows = []
     for t in transactions:
         if t.get("is_payment", False):
@@ -312,6 +314,7 @@ def build_rows(transactions: list, year: int = 2026) -> list:
             "week":                    get_week(date_str),
             "finance_class":           mapping["finance_class"],
             "finance_category":        mapping["finance_category"],
+            "loaded_at":               loaded_at,
         })
 
     return sorted(rows, key=lambda r: r["date"])

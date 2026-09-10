@@ -128,6 +128,32 @@ Una categoría que no esté en `CATEGORY_MAP` ya no desaparece del P&L: cae en e
 | `week` | STRING |
 | `finance_class` | STRING |
 | `finance_category` | STRING |
+| `loaded_at` | TIMESTAMP |
+
+`loaded_at` es el momento de la inserción (UTC), igual para todas las filas de un mismo
+batch. Sirve para auditar o revertir una carga entera:
+
+```sql
+-- qué se cargó hoy
+SELECT * FROM `spark-datahub.cashflow.data_bank_native`
+WHERE DATE(loaded_at) = CURRENT_DATE();
+
+-- revertir un batch
+DELETE FROM `spark-datahub.cashflow.data_bank_native`
+WHERE loaded_at = TIMESTAMP '2026-09-10 15:00:40 UTC';
+```
+
+`NULL` = fila cargada antes de que existiera la columna. Las filas del pipeline de n8n
+tampoco la traen todavía.
+
+Para cargas viejas sin `loaded_at`, el diff por time travel (7 días) hace el mismo trabajo:
+
+```sql
+SELECT * FROM `spark-datahub.cashflow.data_bank_native`
+EXCEPT DISTINCT
+SELECT * FROM `spark-datahub.cashflow.data_bank_native`
+  FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR);
+```
 
 ---
 

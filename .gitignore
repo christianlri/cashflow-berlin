@@ -1,3 +1,5 @@
 .gcloud/
 .env.local
 .claude/worktrees/
+__pycache__/
+*.pyc
