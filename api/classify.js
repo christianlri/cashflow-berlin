@@ -53,18 +53,12 @@ function computeAmounts(eurAmount, currency, originalAmount) {
   };
 }
 
-// ── WEEK LOOKUP ──────────────────────────────────────────────────────────────
-function getWeek(dateStr) {
-  const d = new Date(dateStr);
-  const start = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d - start) / 86400000 + start.getDay() + 1) / 7);
-  return `Week ${week}`;
-}
-
-function getMonth(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-}
+// ── MONTH / WEEK ─────────────────────────────────────────────────────────────
+// Antes se calculaban acá con `new Date(dateStr)` (medianoche UTC) leído con
+// getters locales: en una TZ con offset negativo el día 1 caía al mes anterior
+// (un gasto del 1-Set entraba como agosto). Ahora salen de lib/dates.js, que
+// trabaja con strings/UTC y da lo mismo en cualquier zona horaria.
+const { getMonth, getWeek } = require('../lib/dates');
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -111,6 +105,15 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { rows } = req.body;
     if (!rows || !rows.length) return res.status(400).json({ error: 'No rows' });
+
+    // Una fecha inválida se convertía en month/week basura y la fila terminaba en
+    // el mes equivocado (y encima se interpola cruda en el SQL del dedup).
+    const badDates = rows.filter(r => !getMonth(r.date));
+    if (badDates.length) {
+      return res.status(400).json({
+        error: `Fechas inválidas (formato esperado YYYY-MM-DD): ${badDates.map(r => `${r.commerce} → ${r.date}`).join(', ')}`,
+      });
+    }
 
     try {
       const dataset = bigquery.dataset('cashflow');

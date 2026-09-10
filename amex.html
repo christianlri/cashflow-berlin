@@ -408,7 +408,8 @@ async function handleFiles(files) {
       </div>
     </div>`;
 
-  const allTxns = [];
+  const allTxns   = [];
+  const allUnparsed = [];
 
   for (let i = 0; i < total; i++) {
     const file = files[i];
@@ -430,6 +431,7 @@ async function handleFiles(files) {
 
       const data = await res.json();
       allTxns.push(...(data.transactions || []));
+      allUnparsed.push(...(data.unparsed || []));
     } catch (e) {
       showError(`Error en "${file.name}": ${e.message}`);
       resetUploadZone();
@@ -451,6 +453,13 @@ async function handleFiles(files) {
     showError('No se encontraron transacciones. Revisa que los screenshots sean de la sección "Movimientos" de Interbank.');
     resetUploadZone();
     return;
+  }
+
+  // Filas cuya fecha Gemini devolvió ilegible: antes se cargaban en enero sin
+  // aviso, ahora se descartan y se avisa para revisarlas a mano.
+  if (allUnparsed.length) {
+    const detail = allUnparsed.map(u => `${u.merchant || '?'} (${u.date_raw ?? 'sin fecha'})`).join(', ');
+    showError(`${allUnparsed.length} transacción(es) sin fecha legible — no se cargaron: ${detail}`);
   }
 
   // Map to classify rows

@@ -68,6 +68,20 @@ Currencies supported: `usd` (US$) and `pen` (S/). Converted to EUR at:
 
 Card name in BQ: `Interbank AMEX 6765`
 
+### Fechas
+
+Las fechas de las capturas (`"09 Set"`) y las columnas `month` / `week` salen de
+`lib/dates.js`, compartido por `/api/amex` y `/api/classify`. Dos cosas a tener en cuenta:
+
+- Interbank Perú escribe **setiembre como `Set`**, no `Sep`. El mapa de meses acepta
+  `Set`/`Sep`/`Sept`/`setiembre`, sin tildes ni mayúsculas, y con el prefijo de día de la
+  semana (`"Mié 09 Set"`). Una fecha que no se puede leer ya **no** cae en enero por
+  defecto: la fila se descarta, se avisa en la UI y viene en `unparsed` de `/api/amex`.
+- `month` y `week` se calculan con aritmética de strings/UTC. Antes usaban
+  `new Date(fecha)` (medianoche UTC) con getters locales, así que en una zona con offset
+  negativo el día 1 de mes retrocedía al mes anterior.
+
+
 ---
 
 ## N26 Module (`/clasificar`)

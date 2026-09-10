@@ -12,32 +12,14 @@ const CARDS = {
   premia: 'Interbank Premia',
 };
 
-const MONTH_MAP = {
-  'Ene':'01','Feb':'02','Mar':'03','Abr':'04',
-  'May':'05','Jun':'06','Jul':'07','Ago':'08',
-  'Sep':'09','Oct':'10','Nov':'11','Dic':'12',
-};
-
-function parseDate(dateRaw, year) {
-  // "16 Abr" → "2026-04-16"
-  const [day, mon] = dateRaw.trim().split(' ');
-  return `${year}-${MONTH_MAP[mon] || '01'}-${day.padStart(2,'0')}`;
-}
+// parseDate/getMonth/getWeek viven en lib/dates.js: son compartidos con
+// api/classify.js y son inmunes a la zona horaria del runtime.
+const { parseDate, getMonth, getWeek } = require('../lib/dates');
 
 function computeEur(amount, currency) {
   if (currency === 'usd') return Math.round(amount / 1.08 * 100) / 100;
   if (currency === 'pen') return Math.round(amount / 4    * 100) / 100;
   return amount;
-}
-
-function getWeek(dateStr) {
-  const d = new Date(dateStr), start = new Date(d.getFullYear(), 0, 1);
-  return `Week ${Math.ceil(((d - start) / 86400000 + start.getDay() + 1) / 7)}`;
-}
-
-function getMonth(dateStr) {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
 }
 
 const prompt = (year) => `Extract ALL transactions from this Interbank Peru mobile banking screenshot.
@@ -47,7 +29,8 @@ Return ONLY a valid JSON array — no markdown, no explanation:
 [{ "date_raw":"16 Abr", "merchant":"Rewe markt", "amount":-29.86, "currency":"usd", "is_payment":false, "en_proceso":false }]
 
 Rules:
-- date_raw: day + Spanish month abbreviation ONLY e.g. "16 Abr" (no day-of-week)
+- date_raw: day + month abbreviation EXACTLY as printed, e.g. "16 Abr" (drop the day-of-week prefix: "Mié 09 Set" → "09 Set")
+- do NOT translate or normalize the month: Interbank writes September as "Set", keep it as "Set"
 - currency: "usd" for US$ amounts, "pen" for S/ amounts
 - amount: exact number with sign (negative = expense, positive = credit/payment)
 - is_payment: true for "Pago tarj web app" or any green positive payment entry
@@ -122,25 +105,33 @@ export default async function handler(req, res) {
     if (!seen.has(key)) { seen.add(key); unique.push(t); }
   }
 
-  // Build rows (expenses only)
-  const rows = unique
-    .filter(t => !t.is_payment && t.amount !== 0)
-    .map(t => {
-      const dateStr = parseDate(t.date_raw, year);
-      const eur     = computeEur(t.amount, t.currency);
-      return {
-        date:            dateStr,
-        card:            CARD,
-        commerce:        t.merchant,
-        original_amount: t.amount,
-        currency:        t.currency,
-        eur_amount:      eur,
-        month:           getMonth(dateStr),
-        week:            getWeek(dateStr),
-        en_proceso:      t.en_proceso || false,
-      };
-    })
-    .sort((a, b) => b.date.localeCompare(a.date));
+  // Build rows (expenses only). Una fecha que no se puede parsear se reporta
+  // aparte: antes caía en enero por defecto y el gasto quedaba en el mes equivocado.
+  const rows     = [];
+  const unparsed = [];
 
-  return res.status(200).json({ transactions: rows, debug: debugLog });
+  for (const t of unique.filter(t => !t.is_payment && t.amount !== 0)) {
+    const dateStr = parseDate(t.date_raw, year);
+    if (!dateStr) {
+      unparsed.push({ date_raw: t.date_raw ?? null, merchant: t.merchant, amount: t.amount, currency: t.currency });
+      continue;
+    }
+    rows.push({
+      date:            dateStr,
+      card:            CARD,
+      commerce:        t.merchant,
+      original_amount: t.amount,
+      currency:        t.currency,
+      eur_amount:      computeEur(t.amount, t.currency),
+      month:           getMonth(dateStr),
+      week:            getWeek(dateStr),
+      en_proceso:      t.en_proceso || false,
+    });
+  }
+
+  rows.sort((a, b) => b.date.localeCompare(a.date));
+
+  if (unparsed.length) console.warn(`${unparsed.length} transacción(es) con fecha ilegible:`, unparsed.map(u => u.date_raw));
+
+  return res.status(200).json({ transactions: rows, unparsed, debug: debugLog });
 }

@@ -17,6 +17,7 @@ import base64
 import math
 import datetime
 import subprocess
+import unicodedata
 from pathlib import Path
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -108,20 +109,50 @@ CATEGORY_MAP = {
     "Not Considered":     {"finance_category": "Not Considered",            "finance_class": "Not Considered"},
 }
 
+# Claves normalizadas (minúsculas, sin tildes). Interbank Peru escribe
+# septiembre como "Set", no "Sep": si falta, la fecha se asigna mal.
 MONTH_MAP = {
-    "Ene": "01", "Feb": "02", "Mar": "03", "Abr": "04",
-    "May": "05", "Jun": "06", "Jul": "07", "Ago": "08",
-    "Sep": "09", "Oct": "10", "Nov": "11", "Dic": "12",
+    "ene": "01", "enero": "01",
+    "feb": "02", "febrero": "02",
+    "mar": "03", "marzo": "03",
+    "abr": "04", "abril": "04",
+    "may": "05", "mayo": "05",
+    "jun": "06", "junio": "06",
+    "jul": "07", "julio": "07",
+    "ago": "08", "agosto": "08",
+    "set": "09", "sep": "09", "sept": "09", "setiembre": "09", "septiembre": "09",
+    "oct": "10", "octubre": "10",
+    "nov": "11", "noviembre": "11",
+    "dic": "12", "diciembre": "12",
 }
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
+def _normalize(token: str) -> str:
+    stripped = unicodedata.normalize("NFD", token)
+    stripped = "".join(c for c in stripped if unicodedata.category(c) != "Mn")
+    return "".join(" " if c in "./-," else c for c in stripped).strip().lower()
+
+
 def parse_date(date_raw: str, year: int = 2026) -> str:
-    """'16 Abr' → '2026-04-16'"""
-    parts = date_raw.strip().split()
-    day   = parts[0].zfill(2)
-    month = MONTH_MAP[parts[1]]
-    return f"{year}-{month}-{day}"
+    """'16 Abr' / '09 Set' / 'Mié 09 Set' → '2026-09-09'.
+
+    Lanza ValueError si no se puede leer: mejor fallar que guardar el gasto
+    en el mes equivocado.
+    """
+    day = None
+    month = None
+    for token in _normalize(date_raw or "").split():
+        if token.isdigit() and len(token) <= 2:
+            if day is None:
+                day = int(token)
+        elif token in MONTH_MAP and month is None:
+            month = MONTH_MAP[token]
+
+    if day is None or month is None or not 1 <= day <= 31:
+        raise ValueError(f"No se pudo parsear la fecha: {date_raw!r}")
+
+    return f"{year}-{month}-{str(day).zfill(2)}"
 
 def compute_amounts(original: float, currency: str):
     """Returns (eur, pen, usd) from original amount in given currency."""
@@ -177,7 +208,8 @@ Return ONLY a valid JSON array (no markdown, no explanation) with this structure
 ]
 
 Rules:
-- date_raw: day + abbreviated month ONLY (e.g. "16 Abr"), NO day-of-week prefix
+- date_raw: day + abbreviated month EXACTLY as printed (e.g. "16 Abr"), NO day-of-week prefix
+- do NOT translate or normalize the month: Interbank writes September as "Set", keep "Set"
 - currency: "usd" for amounts prefixed with "US$", "pen" for amounts prefixed with "S/"
 - amount: preserve sign exactly (negative for expenses, positive for payments)
 - is_payment: true for "Pago tarj web app" and any other credit/payment in green
@@ -255,7 +287,11 @@ def build_rows(transactions: list, year: int = 2026) -> list:
         if t["amount"] == 0:
             continue
 
-        date_str = parse_date(t["date_raw"], year)
+        try:
+            date_str = parse_date(t["date_raw"], year)
+        except ValueError as e:
+            print(f"  SKIP: {e} ({t.get('merchant')})")
+            continue
         category = guess_category(t["merchant"])
         mapping  = CATEGORY_MAP.get(category, CATEGORY_MAP["Other"])
         eur, pen, usd = compute_amounts(t["amount"], t["currency"])
