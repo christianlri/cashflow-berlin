@@ -18,6 +18,7 @@ import math
 import datetime
 import subprocess
 import unicodedata
+import uuid
 from pathlib import Path
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -299,6 +300,9 @@ def build_rows(transactions: list, year: int = 2026) -> list:
         eur, pen, usd = compute_amounts(t["amount"], t["currency"])
 
         rows.append({
+            # Clave primaria propia: BigQuery no tiene una, y sin esto /api/rows
+            # no puede apuntar a una fila concreta para editarla o borrarla.
+            "id":                      str(uuid.uuid4()),
             "date":                    date_str,
             "card":                    CARD_NAME,
             "category":                category,

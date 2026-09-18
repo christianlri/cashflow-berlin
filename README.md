@@ -20,6 +20,7 @@ Personal finance dashboard and transaction classifier for N26 and Interbank AMEX
 |---|---|---|
 | `/palette` | `palette.html` | Main dashboard — spending overview by category |
 | `/clasificar` | `clasificar.html` | N26 CSV classifier — upload CSVs, classify, load to BQ |
+| `/datos` | `datos.html` | Explorador de la tabla — filtrar por fecha/tarjeta/categoría, editar y borrar filas |
 | `/amex` | `amex.html` | Interbank AMEX classifier — upload screenshots, AI extracts transactions, classify, load to BQ |
 | `/despensa` | `despensa.html` | Grocery receipt tracker |
 
@@ -34,6 +35,7 @@ Personal finance dashboard and transaction classifier for N26 and Interbank AMEX
 | `/api/classify` | GET | Fetch vendorMap (historical categories) from BQ |
 | `/api/classify` | POST | Insert classified rows into BigQuery |
 | `/api/amex` | POST | Process Interbank screenshots via Gemini, return extracted transactions |
+| `/api/rows` | GET / PATCH / DELETE | Listar con filtros, editar una fila, borrar filas (por `id`) |
 | `/api/receipts` | GET/POST | Grocery receipt data |
 
 ---
@@ -113,6 +115,7 @@ Una categoría que no esté en `CATEGORY_MAP` ya no desaparece del P&L: cae en e
 
 | Field | Type |
 |---|---|
+| `id` | STRING |
 | `date` | DATE |
 | `card` | STRING |
 | `category` | STRING |
@@ -129,6 +132,10 @@ Una categoría que no esté en `CATEGORY_MAP` ya no desaparece del P&L: cae en e
 | `finance_class` | STRING |
 | `finance_category` | STRING |
 | `loaded_at` | TIMESTAMP |
+
+`id` es un UUID generado en la inserción. BigQuery no tiene clave primaria, y sin él dos gastos
+idénticos del mismo día son indistinguibles: `/api/rows` no podría editar o borrar uno sin
+llevarse el otro.
 
 `loaded_at` es el momento de la inserción (UTC), igual para todas las filas de un mismo
 batch. Sirve para auditar o revertir una carga entera:
@@ -154,6 +161,38 @@ EXCEPT DISTINCT
 SELECT * FROM `spark-datahub.cashflow.data_bank_native`
   FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 24 HOUR);
 ```
+
+---
+
+## Explorador de datos (`/datos`)
+
+Tabla completa con filtros de fecha (presets: hoy, 7 días, 30 días, este mes, mes pasado, todo),
+tarjeta, categoría y búsqueda por comercio. Se puede editar en línea y borrar filas seleccionadas.
+
+Campos editables: `date`, `commerce`, `category`, `original_amount`, `eur_amount`. El resto
+(`month`, `week`, `pen_amount`, `usd_amount`, `finance_class`, `finance_category`) lo **recalcula
+el servidor** en cada UPDATE, para que no se pueda dejar una fila inconsistente desde la UI.
+
+Requiere las dos columnas agregadas después del esquema original:
+
+```sql
+ALTER TABLE `spark-datahub.cashflow.data_bank_native` ADD COLUMN id STRING;
+UPDATE  `spark-datahub.cashflow.data_bank_native` SET id = GENERATE_UUID() WHERE id IS NULL;
+ALTER TABLE `spark-datahub.cashflow.data_bank_native` ADD COLUMN loaded_at TIMESTAMP;
+```
+
+Si falta alguna, `/api/rows` devuelve el `ALTER` que hay que correr en vez de un 500 opaco.
+
+### Dos limitaciones que conviene conocer
+
+**Streaming buffer.** `/api/classify` inserta con la streaming API, y BigQuery no permite UPDATE ni
+DELETE sobre filas que siguen en el buffer (hasta ~90 min después de cargarlas). La página muestra
+ese caso como un mensaje explicando que hay que esperar, no como un error genérico.
+
+**Sin autenticación.** `/api/rows` hereda el `Access-Control-Allow-Origin: *` sin auth del resto de
+`/api`, así que cualquiera con la URL del deploy puede borrar filas. Es una decisión consciente
+mientras el proyecto sea personal. Si eso cambia, lo primero es un token en una env var de Vercel
+validado en el handler.
 
 ---
 

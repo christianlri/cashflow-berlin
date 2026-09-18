@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palette · Datos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --white: #ffffff;
+      --bg: #f5f5f7;
+      --ink: #0a0a0f;
+      --ink-soft: #4a4a5a;
+      --ink-muted: #9a9aaa;
+      --border: #e8e8f0;
+
+      --blue:    #5B52A0;
+      --violet:  #7B72C0;
+      --magenta: #C47B8E;
+      --grad: linear-gradient(135deg, #7B72C0 0%, #BCC0DC 55%, #C47B8E 100%);
+      --grad-soft: linear-gradient(135deg, rgba(123,114,192,0.08) 0%, rgba(188,192,220,0.08) 55%, rgba(196,123,142,0.08) 100%);
+
+      --green:      #00875a;
+      --green-soft: #e6f6f1;
+      --red:        #c0392b;
+      --red-soft:   #fdeceb;
+      --amber:      #b45309;
+      --amber-soft: #fdf3e3;
+
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 20px; position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner {
+      max-width: 1100px; margin: 0 auto; display: flex;
+      align-items: center; justify-content: space-between; height: 56px;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .logo-mark { width: 28px; height: 28px; background: var(--grad); border-radius: 8px; flex-shrink: 0; }
+    .logo-name {
+      font-size: 18px; font-weight: 700; letter-spacing: -0.5px;
+      background: var(--grad); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .count-pill {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 20px;
+      padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--ink-soft);
+      font-variant-numeric: tabular-nums;
+    }
+
+    main { padding: 16px 16px 90px; max-width: 1100px; margin: 0 auto; }
+
+    /* ── FILTROS ── */
+    .filters {
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; margin-bottom: 12px;
+      display: grid; gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .field label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+      font-weight: 700; color: var(--ink-muted);
+    }
+    .field input, .field select {
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--white); color: var(--ink); width: 100%;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--violet); }
+
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .preset {
+      background: var(--white); border: 1.5px solid var(--border); border-radius: 20px;
+      padding: 6px 13px; font-size: 12px; font-weight: 600; color: var(--ink-soft);
+      cursor: pointer; font-family: 'Outfit', sans-serif; white-space: nowrap;
+    }
+    .preset:hover { border-color: var(--violet); color: var(--blue); }
+
+    .btn {
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+      padding: 9px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+      background: var(--white); color: var(--ink-soft); cursor: pointer; white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { border-color: var(--violet); color: var(--blue); }
+    .btn.primary { background: var(--grad); color: white; border-color: transparent; }
+    .btn.danger  { background: var(--red); color: white; border-color: transparent; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── TABLA ── */
+    .table-wrap {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 860px; }
+    thead th {
+      background: var(--bg); text-align: left; padding: 10px 10px;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+      font-weight: 700; color: var(--ink-muted); white-space: nowrap;
+      border-bottom: 1px solid var(--border); position: sticky; top: 56px; z-index: 5;
+    }
+    tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--grad-soft); }
+    tbody tr.selected td { background: rgba(123,114,192,0.12); }
+    tbody tr.dirty td { background: var(--amber-soft); }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    td.neg { color: var(--red); font-weight: 600; }
+    td.pos { color: var(--green); font-weight: 600; }
+    .cell-input, .cell-select {
+      font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 500;
+      border: 1px solid transparent; border-radius: 6px; padding: 4px 6px;
+      background: transparent; color: var(--ink); width: 100%; min-width: 60px;
+    }
+    .cell-input:hover, .cell-select:hover { border-color: var(--border); }
+    .cell-input:focus, .cell-select:focus { outline: none; border-color: var(--violet); background: var(--white); }
+    .cell-input.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .col-check { width: 34px; }
+    .col-check input { width: 15px; height: 15px; cursor: pointer; accent-color: var(--violet); }
+    .card-tag {
+      font-size: 10px; font-weight: 600; color: var(--ink-soft);
+      background: var(--bg); border-radius: 5px; padding: 3px 6px; white-space: nowrap;
+    }
+    .loaded-at { font-size: 10px; color: var(--ink-muted); white-space: nowrap; }
+
+    /* ── BARRA DE ACCIONES ── */
+    .action-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; background: var(--white);
+      border-top: 1px solid var(--border); padding: 12px 16px; z-index: 90;
+      display: none; align-items: center; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap;
+    }
+    .action-bar.show { display: flex; }
+    .action-info { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+    .action-btns { display: flex; gap: 8px; margin-left: auto; }
+
+    /* ── MENSAJES ── */
+    .msg {
+      border-radius: var(--radius-sm); padding: 11px 14px; font-size: 13px;
+      font-weight: 500; margin-bottom: 12px; display: none; white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .msg.show { display: block; }
+    .msg.ok    { background: var(--green-soft); color: var(--green); border: 1px solid var(--green); }
+    .msg.err   { background: var(--red-soft);   color: var(--red);   border: 1px solid var(--red); }
+    .msg.warn  { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber); }
+
+    .empty, #loading {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 60px 32px; gap: 14px; color: var(--ink-muted); font-size: 13px;
+    }
+    .spinner {
+      width: 30px; height: 30px; border: 3px solid var(--border);
+      border-top-color: var(--violet); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .spinner.white { border-color: rgba(255,255,255,0.35); border-top-color: white; width: 14px; height: 14px; display: inline-block; vertical-align: -2px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .totals {
+      display: flex; gap: 18px; flex-wrap: wrap; padding: 11px 14px;
+      border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-soft);
+    }
+    .totals strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+    footer { text-align: center; padding: 20px; font-size: 11px; color: var(--ink-muted); }
+
+    /* ── SIDEBAR NAV ── */
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .nav-overlay.open { opacity: 1; pointer-events: all; }
+    .nav-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--white); z-index: 201; transform: translateX(-100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; }
+    .nav-sidebar.open { transform: translateX(0); }
+    .nav-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .nav-logo-mark { width: 24px; height: 24px; background: var(--grad); border-radius: 6px; flex-shrink: 0; }
+    .nav-logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.5px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-links { padding: 12px 8px; flex: 1; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 500; color: var(--ink-soft); transition: background 0.15s; }
+    .nav-link:hover { background: var(--bg); color: var(--ink); }
+    .nav-link.active { background: rgba(115,119,236,0.1); color: var(--blue); font-weight: 600; }
+    .nav-link-icon { font-size: 18px; width: 24px; text-align: center; }
+    .hamburger { background: none; border: none; cursor: pointer; padding: 8px; display: flex; flex-direction: column; gap: 4px; border-radius: 8px; }
+    .hamburger:hover { background: var(--bg); }
+    .hamburger span { display: block; width: 18px; height: 2px; background: var(--ink-soft); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="nav-overlay" id="navOverlay" onclick="closeSidebar()"></div>
+<nav class="nav-sidebar" id="navSidebar">
+  <div class="nav-header">
+    <div class="nav-logo-mark"></div>
+    <div class="nav-logo-name">Palette</div>
+  </div>
+  <div class="nav-links">
+    <a href="/palette"    class="nav-link"><span class="nav-link-icon">📊</span> Dashboard</a>
+    <a href="/pl"         class="nav-link"><span class="nav-link-icon">📑</span> P&amp;L</a>
+    <a href="/datos"      class="nav-link active"><span class="nav-link-icon">🗂️</span> Datos</a>
+    <a href="/clasificar" class="nav-link"><span class="nav-link-icon">🏦</span> N26</a>
+    <a href="/amex"       class="nav-link"><span class="nav-link-icon">💳</span> Interbank</a>
+    <a href="/despensa"   class="nav-link"><span class="nav-link-icon">🛒</span> Despensa</a>
+  </div>
+</nav>
+
+<header>
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="/" class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-name">Palette</div>
+      </a>
+    </div>
+    <div class="header-right">
+      <div class="count-pill" id="countPill">—</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="msg" id="msg"></div>
+
+  <div class="presets" id="presets"></div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="from">Desde</label>
+      <input type="date" id="from" />
+    </div>
+    <div class="field">
+      <label for="to">Hasta</label>
+      <input type="date" id="to" />
+    </div>
+    <div class="field">
+      <label for="card">Tarjeta</label>
+      <select id="card"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="category">Categoría</label>
+      <select id="category"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="q">Comercio</label>
+      <input type="text" id="q" placeholder="buscar…" />
+    </div>
+    <div class="field">
+      <label>&nbsp;</label>
+      <button class="btn primary" id="searchBtn" onclick="load()">Buscar</button>
+    </div>
+  </div>
+
+  <div id="loading" style="display:none">
+    <div class="spinner"></div>
+    <div>Consultando BigQuery…</div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-check"><input type="checkbox" id="checkAll" onchange="toggleAll(this.checked)" /></th>
+          <th>Fecha</th>
+          <th>Comercio</th>
+          <th>Categoría</th>
+          <th>Tarjeta</th>
+          <th style="text-align:right">Original</th>
+          <th>Mon.</th>
+          <th style="text-align:right">EUR</th>
+          <th>Cargado</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="totals" id="totals"></div>
+  </div>
+
+  <div class="empty" id="empty" style="display:none">Sin resultados para ese filtro.</div>
+</main>
+
+<div class="action-bar" id="actionBar">
+  <div class="action-info" id="actionInfo"></div>
+  <div class="action-btns">
+    <button class="btn" onclick="clearSelection()">Deseleccionar</button>
+    <button class="btn" id="saveBtn" onclick="saveEdits()" disabled>Guardar cambios</button>
+    <button class="btn danger" id="deleteBtn" onclick="deleteSelected()" disabled>Borrar</button>
+  </div>
+</div>
+
+<footer>Palette · spark-datahub · BigQuery</footer>
+
+<script>
+const API = '/api/rows';
+
+let rows      = [];              // filas tal como vinieron del servidor
+let edits     = new Map();       // id → { campo: valorNuevo }
+let selected  = new Set();       // ids tildados
+let categories = [];
+
+// ── Presets de fecha ─────────────────────────────────────────────────────────
+const PRESETS = [
+  { label: 'Hoy',           days: 0   },
+  { label: 'Últimos 7 días', days: 7  },
+  { label: 'Últimos 30 días', days: 30 },
+  { label: 'Este mes',      month: 0  },
+  { label: 'Mes pasado',    month: -1 },
+  { label: 'Todo',          all: true },
+];
+
+function iso(d) { return d.toISOString().slice(0, 10); }
+
+function applyPreset(p) {
+  const today = new Date();
+  let from, to;
+  if (p.all) {
+    from = ''; to = '';
+  } else if (p.month !== undefined) {
+    const base = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + p.month, 1));
+    from = iso(base);
+    to   = iso(new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + 1, 0)));
+  } else {
+    to   = iso(today);
+    from = iso(new Date(today.getTime() - p.days * 86400000));
+  }
+  document.getElementById('from').value = from;
+  document.getElementById('to').value   = to;
+  load();
+}
+
+document.getElementById('presets').innerHTML = PRESETS
+  .map((p, i) => `<button class="preset" onclick="applyPreset(PRESETS[${i}])">${p.label}</button>`)
+  .join('');
+
+// ── Carga ────────────────────────────────────────────────────────────────────
+async function load() {
+  const params = new URLSearchParams();
+  for (const key of ['from', 'to', 'card', 'category', 'q']) {
+    const v = document.getElementById(key).value.trim();
+    if (v) params.set(key, v);
+  }
+
+  showMsg('');
+  document.getElementById('loading').style.display   = 'flex';
+  document.getElementById('tableWrap').style.display = 'none';
+  document.getElementById('empty').style.display     = 'none';
+
+  try {
+    const res  = await fetch(`${API}?${params}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    rows = data.rows || [];
+    if (data.categories?.length) { categories = data.categories; fillCategorySelect(); }
+    fillCardSelect();
+    edits.clear();
+    selected.clear();
+
+    if (data.truncated) showMsg(`Mostrando las primeras ${rows.length} filas. Afiná el filtro para ver el resto.`, 'warn');
+
+    render();
+  } catch (e) {
+    showMsg(e.message, 'err');
+    document.getElementById('tableWrap').style.display = 'none';
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function fillCategorySelect() {
+  const sel = document.getElementById('category');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>' + categories.map(c => `<option>${c}</option>`).join('');
+  sel.value = cur;
+}
+
+function fillCardSelect() {
+  const sel   = document.getElementById('card');
+  const cur   = sel.value;
+  const cards = [...new Set(rows.map(r => r.card).filter(Boolean))].sort();
+  // Sin filtro previo la lista sale de lo que se ve; conservamos lo elegido aunque
+  // ya no aparezca en los resultados actuales.
+  if (cur && !cards.includes(cur)) cards.push(cur);
+  sel.innerHTML = '<option value="">Todas</option>' + cards.map(c => `<option>${c}</option>`).join('');
+  sel.value = cur;
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function valueOf(row, field) {
+  const e = edits.get(row.id);
+  return e && field in e ? e[field] : row[field];
+}
+
+function render() {
+  const tbody = document.getElementById('tbody');
+
+  if (!rows.length) {
+    document.getElementById('tableWrap').style.display = 'none';
+    document.getElementById('empty').style.display     = 'flex';
+    updateBar();
+    updateCount();
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const eur    = parseFloat(valueOf(r, 'eur_amount')) || 0;
+    const dirty  = edits.has(r.id);
+    const isSel  = selected.has(r.id);
+    const cat    = valueOf(r, 'category') || '';
+    const catOpts = [...new Set([...categories, cat].filter(Boolean))]
+      .map(c => `<option${c === cat ? ' selected' : ''}>${esc(c)}</option>`).join('');
+
+    return `
+      <tr class="${isSel ? 'selected' : ''} ${dirty ? 'dirty' : ''}" data-id="${esc(r.id)}">
+        <td class="col-check">
+          <input type="checkbox" ${isSel ? 'checked' : ''} onchange="toggleRow('${esc(r.id)}', this.checked)" />
+        </td>
+        <td><input class="cell-input" type="date" value="${esc(valueOf(r, 'date'))}"
+                   onchange="edit('${esc(r.id)}','date',this.value)" /></td>
+        <td><input class="cell-input" type="text" value="${esc(valueOf(r, 'commerce'))}"
+                   onchange="edit('${esc(r.id)}','commerce',this.value)" /></td>
+        <td><select class="cell-select" onchange="edit('${esc(r.id)}','category',this.value)">${catOpts}</select></td>
+        <td><span class="card-tag">${esc(valueOf(r, 'card'))}</span></td>
+        <td class="num"><input class="cell-input num" type="number" step="0.01" value="${esc(valueOf(r, 'original_amount'))}"
+                   onchange="edit('${esc(r.id)}','original_amount',this.value)" /></td>
+        <td>${esc(valueOf(r, 'currency_original_amount'))}</td>
+        <td class="num"><input class="cell-input num" type="number" step="0.01" value="${esc(valueOf(r, 'eur_amount'))}"
+                   onchange="edit('${esc(r.id)}','eur_amount',this.value)" /></td>
+        <td class="loaded-at">${r.loaded_at ? esc(String(r.loaded_at).slice(0, 16).replace('T', ' ')) : '—'}</td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('tableWrap').style.display = 'block';
+  document.getElementById('empty').style.display     = 'none';
+
+  const totalEur = rows.reduce((s, r) => s + (parseFloat(valueOf(r, 'eur_amount')) || 0), 0);
+  document.getElementById('totals').innerHTML =
+    `<span>${rows.length} filas</span><span>Total EUR: <strong>${totalEur.toFixed(2)}</strong></span>`;
+
+  updateBar();
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('countPill').textContent = rows.length ? `${rows.length} filas` : '—';
+}
+
+// ── Edición ──────────────────────────────────────────────────────────────────
+function edit(id, field, value) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+
+  const current = edits.get(id) || {};
+  // Volver al valor original limpia el cambio, así no se manda un UPDATE inútil.
+  if (String(value) === String(row[field])) delete current[field];
+  else current[field] = value;
+
+  if (Object.keys(current).length) edits.set(id, current);
+  else edits.delete(id);
+
+  const tr = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  if (tr) tr.classList.toggle('dirty', edits.has(id));
+  updateBar();
+}
+
+function toggleRow(id, on) {
+  if (on) selected.add(id); else selected.delete(id);
+  const tr = document.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  if (tr) tr.classList.toggle('selected', on);
+  updateBar();
+}
+
+function toggleAll(on) {
+  selected = on ? new Set(rows.map(r => r.id)) : new Set();
+  render();
+}
+
+function clearSelection() {
+  selected.clear();
+  document.getElementById('checkAll').checked = false;
+  render();
+}
+
+function updateBar() {
+  const bar = document.getElementById('actionBar');
+  const n   = selected.size;
+  const d   = edits.size;
+
+  bar.classList.toggle('show', n > 0 || d > 0);
+  document.getElementById('deleteBtn').disabled = n === 0;
+  document.getElementById('saveBtn').disabled   = d === 0;
+
+  const parts = [];
+  if (n) parts.push(`${n} seleccionada${n > 1 ? 's' : ''}`);
+  if (d) parts.push(`${d} con cambios sin guardar`);
+  document.getElementById('actionInfo').textContent = parts.join(' · ');
+}
+
+// ── Guardar ──────────────────────────────────────────────────────────────────
+async function saveEdits() {
+  if (!edits.size) return;
+  const btn = document.getElementById('saveBtn');
+  btn.innerHTML = '<span class="spinner white"></span> Guardando…';
+  btn.disabled  = true;
+
+  const entries = [...edits.entries()];
+  const failed  = [];
+  let ok = 0;
+
+  for (const [id, changes] of entries) {
+    try {
+      const res  = await fetch(API, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id, ...changes }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      ok++;
+    } catch (e) {
+      const row = rows.find(r => r.id === id);
+      failed.push(`${row?.commerce || id}: ${e.message}`);
+    }
+  }
+
+  btn.innerHTML = 'Guardar cambios';
+  if (failed.length) showMsg(`${ok} fila(s) guardada(s). Fallaron ${failed.length}:\n${failed.join('\n')}`, 'err');
+  else showMsg(`${ok} fila(s) actualizada(s).`, 'ok');
+
+  await load();
+}
+
+// ── Borrar ───────────────────────────────────────────────────────────────────
+async function deleteSelected() {
+  const ids = [...selected];
+  if (!ids.length) return;
+
+  const detail = ids.slice(0, 5).map(id => {
+    const r = rows.find(x => x.id === id);
+    return r ? `• ${r.date} · ${r.commerce} · ${r.eur_amount} EUR` : `• ${id}`;
+  }).join('\n');
+  const more = ids.length > 5 ? `\n…y ${ids.length - 5} más` : '';
+
+  if (!confirm(`Borrar ${ids.length} fila(s) de BigQuery? Esto no se puede deshacer.\n\n${detail}${more}`)) return;
+
+  const btn = document.getElementById('deleteBtn');
+  btn.innerHTML = '<span class="spinner white"></span> Borrando…';
+  btn.disabled  = true;
+
+  try {
+    const res  = await fetch(API, {
+      method:  'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ ids }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    showMsg(`${data.deleted} fila(s) borrada(s).`, 'ok');
+    selected.clear();
+    await load();
+  } catch (e) {
+    showMsg(e.message, 'err');
+  } finally {
+    btn.innerHTML = 'Borrar';
+    btn.disabled  = false;
+  }
+}
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function showMsg(text, kind) {
+  const el = document.getElementById('msg');
+  el.className = 'msg' + (text ? ` show ${kind || 'ok'}` : '');
+  el.textContent = text;
+}
+
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') load(); });
+
+function openSidebar()  {
+  document.getElementById('navSidebar').classList.add('open');
+  document.getElementById('navOverlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('navSidebar').classList.remove('open');
+  document.getElementById('navOverlay').classList.remove('open');
+}
+
+// Arranque: últimos 30 días.
+applyPreset(PRESETS[2]);
+</script>
+</body>
+</html>

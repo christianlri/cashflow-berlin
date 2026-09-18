@@ -19,9 +19,17 @@
     "api/amex.js": {
       "memory": 512,
       "maxDuration": 60
+    },
+    "api/rows.js": {
+      "memory": 512,
+      "maxDuration": 30
     }
   },
   "routes": [
+    {
+      "src": "/datos",
+      "dest": "/datos.html"
+    },
     {
       "src": "/palette",
       "dest": "/palette.html"
