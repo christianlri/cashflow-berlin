@@ -18,6 +18,27 @@ const { CATEGORY_MAP, ALL_CATEGORIES, mappingFor, computeAmounts } = require('..
 // trabaja con strings/UTC y da lo mismo en cualquier zona horaria.
 const { getMonth, getWeek } = require('../lib/dates');
 
+// ── PENDIENTE vs LIQUIDADO ───────────────────────────────────────────────────
+// Interbank muestra un cargo primero "en proceso" en S/ (nombre recortado) y
+// luego liquidado en US$ (nombre completo). Es la misma compra si coinciden
+// tarjeta, fecha y primera palabra del comercio, cambia la moneda y los montos
+// en EUR difieren menos de 15%.
+function normCurrency(c) {
+  const x = (c || 'eur').toLowerCase();
+  return x === 'soles' ? 'pen' : x;
+}
+
+function isPendingPair(a, b) {
+  const ca = normCurrency(a.currency), cb = normCurrency(b.currency);
+  if (ca === cb || ![ca, cb].includes('usd') || ![ca, cb].includes('pen')) return false;
+  if (a.date !== b.date || a.card !== b.card) return false;
+  const w1 = s => (s || '').toLowerCase().trim().split(/\s+/)[0];
+  if (!w1(a.commerce) || w1(a.commerce) !== w1(b.commerce)) return false;
+  const ea = Math.abs(parseFloat(a.eur_amount)), eb = Math.abs(parseFloat(b.eur_amount));
+  if (!ea || !eb) return false;
+  return Math.min(ea, eb) / Math.max(ea, eb) >= 0.85;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -84,7 +105,8 @@ export default async function handler(req, res) {
       const cardFilter = cards.map(c => `'${c.replace(/'/g, "''")}'`).join(', ');
 
       const [existingRows] = await bigquery.query(`
-        SELECT FORMAT_DATE('%Y-%m-%d', date) AS date_str, card, commerce, original_amount
+        SELECT id, FORMAT_DATE('%Y-%m-%d', date) AS date_str, card, commerce, original_amount,
+               currency_original_amount, eur_amount
         FROM \`spark-datahub.cashflow.data_bank_native\`
         WHERE date IN (${dateFilter})
           AND card IN (${cardFilter})
@@ -93,21 +115,55 @@ export default async function handler(req, res) {
       const existingKeys = new Set(
         existingRows.map(r => `${r.date_str}|${r.card}|${r.commerce}|${r.original_amount}`)
       );
+      const existing = existingRows.map(r => ({
+        id: r.id, date: r.date_str, card: r.card, commerce: r.commerce,
+        currency: r.currency_original_amount, eur_amount: r.eur_amount, used: false,
+      }));
 
       const newRows     = [];
       const skippedRows = [];
-      for (const r of rows) {
-        if (r.category === 'Finance') {
-          skippedRows.push({ date: r.date, commerce: r.commerce, original_amount: r.original_amount, currency: r.currency, reason: 'finance' });
+      const toReplace   = []; // US$ liquidado que reemplaza un S/ pendiente ya cargado
+      const skip = (r, reason) => skippedRows.push({ date: r.date, commerce: r.commerce, original_amount: r.original_amount, currency: r.currency, reason });
+
+      // Primero los US$, para que un S/ pendiente del mismo batch encuentre su par
+      const ordered = [...rows].sort((a, b) =>
+        (normCurrency(a.currency) === 'usd' ? 0 : 1) - (normCurrency(b.currency) === 'usd' ? 0 : 1));
+
+      for (const r of ordered) {
+        if (r.category === 'Finance') { skip(r, 'finance'); continue; }
+        const key = `${r.date}|${r.card}|${r.commerce}|${r.original_amount}`;
+        if (existingKeys.has(key)) { skip(r, 'exists'); continue; }
+
+        const ex = existing.find(e => !e.used && e.id && isPendingPair(r, e));
+        if (ex) {
+          ex.used = true;
+          if (normCurrency(r.currency) === 'usd') toReplace.push({ row: r, id: ex.id, old: ex });
+          else skip(r, 'pending_dup');
           continue;
         }
-        const key = `${r.date}|${r.card}|${r.commerce}|${r.original_amount}`;
-        if (existingKeys.has(key)) skippedRows.push({ date: r.date, commerce: r.commerce, original_amount: r.original_amount, currency: r.currency });
-        else newRows.push(r);
+        const inBatch = newRows.find(n => !n._paired && isPendingPair(r, n));
+        if (inBatch) { inBatch._paired = true; skip(r, 'pending_dup'); continue; }
+
+        newRows.push(r);
+      }
+
+      // Borra los pendientes que se reemplazan. Las filas que siguen en el
+      // streaming buffer de BigQuery (cargadas hace minutos) no se pueden borrar:
+      // en ese caso se conserva el pendiente y se omite el liquidado.
+      let replacedRows = [];
+      if (toReplace.length) {
+        try {
+          const ids = toReplace.map(t => `'${String(t.id).replace(/'/g, "''")}'`).join(', ');
+          await bigquery.query(`DELETE FROM \`spark-datahub.cashflow.data_bank_native\` WHERE id IN (${ids})`);
+          replacedRows = toReplace.map(t => ({ date: t.row.date, commerce: t.row.commerce, replaced: t.old.commerce }));
+          newRows.push(...toReplace.map(t => t.row));
+        } catch (e) {
+          toReplace.forEach(t => skip(t.row, 'pending_locked'));
+        }
       }
 
       if (!newRows.length) {
-        return res.status(200).json({ inserted: 0, skipped: skippedRows.length, skippedRows });
+        return res.status(200).json({ inserted: 0, skipped: skippedRows.length, skippedRows, replaced: replacedRows.length, replacedRows });
       }
 
       const unmapped = [...new Set(newRows.map(r => r.category).filter(c => !CATEGORY_MAP[c]))];
@@ -147,6 +203,8 @@ export default async function handler(req, res) {
         inserted: toInsert.length,
         skipped: skippedRows.length,
         skippedRows,
+        replaced: replacedRows.length,
+        replacedRows,
         ...(unmapped.length ? { warnings: [`Categorías sin mapeo, cargadas como Extra & One-Offs: ${unmapped.join(', ')}`] } : {}),
       });
     } catch (e) {

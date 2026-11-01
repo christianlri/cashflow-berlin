@@ -475,6 +475,17 @@ async function handleFiles(files) {
   rowStates     = parsedRows.map(() => 'approved');
   currentFilter = 'all';
 
+  // Misma compra vista como pendiente (S/) y liquidada (US$) en este batch → omitir la S/
+  const firstWord = s => (s || '').toLowerCase().trim().split(/\s+/)[0];
+  const paired = new Set();
+  parsedRows.forEach((p, i) => {
+    if (p.currency !== 'pen') return;
+    const j = parsedRows.findIndex((u, k) => !paired.has(k) && u.currency === 'usd'
+      && u.date === p.date && firstWord(u.commerce) === firstWord(p.commerce)
+      && Math.min(Math.abs(u.eur_amount), Math.abs(p.eur_amount)) / Math.max(Math.abs(u.eur_amount), Math.abs(p.eur_amount)) >= 0.85);
+    if (j >= 0) { paired.add(j); rowStates[i] = 'skipped'; p.pendingDup = true; }
+  });
+
   uploadZone.style.display = 'none';
   document.getElementById('classifySection').style.display = 'block';
   document.getElementById('bottomBar').style.display       = 'flex';
@@ -537,7 +548,7 @@ function renderRows() {
         </div>
         <div style="min-width:0">
           <div class="tx-vendor" title="${r.commerce}">${r.commerce}</div>
-          <div class="tx-fc">${map.finance_category}${r.en_proceso ? ' <span class="badge-proceso">En proceso</span>' : ''}</div>
+          <div class="tx-fc">${map.finance_category}${r.en_proceso ? ' <span class="badge-proceso">En proceso</span>' : ''}${r.pendingDup ? ' <span class="badge-proceso">Duplicado: ya viene liquidado en US$</span>' : ''}</div>
         </div>
         <div class="tx-right">
           <div class="tx-amount neg">€${Math.abs(r.eur_amount).toFixed(2)}</div>
@@ -619,10 +630,11 @@ async function loadToDb() {
 
     const msg = document.getElementById('resultMsg');
     msg.style.display = 'block';
+    const replacedNote = data.replaced > 0 ? ` · ${data.replaced} pendientes (S/) reemplazados por el cargo liquidado (US$)` : '';
     if (data.inserted > 0 && data.skipped === 0) {
-      msg.textContent = `✓ ${data.inserted} transacciones cargadas a BigQuery`;
+      msg.textContent = `✓ ${data.inserted} transacciones cargadas a BigQuery${replacedNote}`;
     } else if (data.inserted > 0) {
-      msg.textContent = `✓ ${data.inserted} cargadas · ${data.skipped} ya existían`;
+      msg.textContent = `✓ ${data.inserted} cargadas · ${data.skipped} ya existían${replacedNote}`;
     } else {
       msg.style.background = 'var(--amber-soft)';
       msg.style.borderColor = 'var(--amber)';
@@ -638,7 +650,10 @@ async function loadToDb() {
         const origLabel = r.currency === 'usd' ? `US$ ${Math.abs(r.original_amount).toFixed(2)}`
                         : r.currency === 'pen' ? `S/ ${Math.abs(r.original_amount).toFixed(2)}`
                         : `€${Math.abs(r.original_amount).toFixed(2)}`;
-        return `<div class="dup-row"><span>${r.date} · ${r.commerce}</span><span>${origLabel}</span></div>`;
+        const why = r.reason === 'pending_dup'    ? ' (pendiente ya cargado como liquidado)'
+                  : r.reason === 'pending_locked' ? ' (no se pudo reemplazar el pendiente, reintenta en 1 h)'
+                  : '';
+        return `<div class="dup-row"><span>${r.date} · ${r.commerce}${why}</span><span>${origLabel}</span></div>`;
       }).join('');
     }
 
