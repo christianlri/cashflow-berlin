@@ -1,0 +1,60 @@
+pl.html
+  s_e293aad9100e4c::t_76a87b01bef903 249
+amex.html
+  s_e293aad9100e4c::t_76a87b01bef903 167
+vercel.json
+  s_be094d5862cc14::t_eec0428e5ea1df 56-59
+  s_be094d5862cc14::t_97a0ee99ca0c27 27-29
+  s_e293aad9100e4c::t_2d783b897bbf04 26
+api/recurring.js
+  s_be094d5862cc14::t_3c9eda4efd6cf4 1-15,17-29
+  s_be094d5862cc14::t_6caebf2bbc98a2 16
+palette.html
+  s_be094d5862cc14::t_4fd0f46c0a5c92 408
+recurrentes.html
+  s_be094d5862cc14::t_450cc57b3f2f13 168,170-173
+  s_be094d5862cc14::t_79c542dd404abf 1-97,103,111,118,130-140,142-144,193-230,233-234,236-272,276-277,279-291,294-308,341-342,345-346,349-377,382,449-493,512-513,515,517-520,522-524,528-530,532-534,538-551,556-570
+  s_e293aad9100e4c::t_76a87b01bef903 231-232,235
+  s_be094d5862cc14::t_aea5444754b5d6 98-102,104-110,112-117,119-129
+  s_be094d5862cc14::t_615069b4e59897 552-555
+  s_be094d5862cc14::t_04318b9d25cb02 309,324,331-340,343-344
+  s_be094d5862cc14::t_b808cc341cd236 347-348
+  s_be094d5862cc14::t_b2cce793795d1f 415-426,430,433,438,442-445
+  s_be094d5862cc14::t_70ed3863575296 145-167,169,174-192
+  s_be094d5862cc14::t_6ffc97c577803f 141
+  s_be094d5862cc14::t_b7c6e0e89a295b 378-381,383-414,427-429,431-432,434-437,439-441,446-448
+  s_be094d5862cc14::t_768640a88496c9 494-511,514,516,521,525-527,531,535-537
+  s_be094d5862cc14::t_7eb9175dacb020 310-323,325-330
+  s_be094d5862cc14::t_447b7992084806 273-275,278
+  s_be094d5862cc14::t_3a55ddf42d44ad 292-293
+despensa.html
+  s_be094d5862cc14::t_4fd0f46c0a5c92 144
+clasificar.html
+  s_be094d5862cc14::t_4fd0f46c0a5c92 149
+datos.html
+  s_e293aad9100e4c::t_76a87b01bef903 215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4b08defda18b3ce2369a6001345e49c6027d8c07",
+  "prompts": {},
+  "sessions": {
+    "s_be094d5862cc14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "efdb1bf3-8b22-49f0-82ea-fdf106caf59f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Christian La Rosa <christian.la@deliveryhero.com>"
+    },
+    "s_e293aad9100e4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "67d43a07-b2f5-4771-b81f-03251092464f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Christian La Rosa <christian.la@deliveryhero.com>"
+    }
+  }
+}
