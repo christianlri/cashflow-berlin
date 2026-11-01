@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recurrentes · Palette</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --white: #ffffff;
+      --bg: #f5f5f7;
+      --ink: #0a0a0f;
+      --ink-soft: #4a4a5a;
+      --ink-muted: #9a9aaa;
+      --border: #e8e8f0;
+
+      --blue:    #5B52A0;
+      --violet:  #7B72C0;
+      --magenta: #C47B8E;
+      --grad: linear-gradient(135deg, #7B72C0 0%, #BCC0DC 55%, #C47B8E 100%);
+
+      --green:      #00875a;
+      --green-soft: #e6f6f1;
+      --red:        #c0392b;
+      --red-soft:   #fdecea;
+      --amber:      #b45309;
+      --amber-soft: #fef3c7;
+      --violet-soft: rgba(123,114,192,0.1);
+      --gray-soft:  #f0f0f4;
+
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ── */
+    header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 100; }
+    .header-inner { max-width: 480px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .logo-mark { width: 28px; height: 28px; background: var(--grad); border-radius: 8px; flex-shrink: 0; }
+    .logo-name { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .month-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+
+    /* ── LOADING ── */
+    #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 32px; gap: 14px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--violet); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--ink-muted); }
+
+    main { padding: 16px 16px 60px; max-width: 480px; margin: 0 auto; }
+
+    /* ── TABS ── */
+    .month-tabs, .filter-chips { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; }
+    .month-tabs::-webkit-scrollbar, .filter-chips::-webkit-scrollbar { display: none; }
+    .month-tab, .chip {
+      background: var(--white); border: 1.5px solid var(--border); border-radius: 20px;
+      padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--ink-soft);
+      cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: 'Outfit', sans-serif; flex-shrink: 0;
+    }
+    .month-tab.active { background: var(--grad); border-color: transparent; color: white; }
+    .chip.active { border-color: var(--blue); color: var(--blue); background: var(--violet-soft); }
+    .chip-count { font-weight: 700; margin-left: 4px; opacity: 0.7; }
+
+    .section-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); margin: 20px 0 10px; }
+
+    /* ── HERO ── */
+    .hero-card { background: var(--grad); border-radius: var(--radius); padding: 22px; color: white; position: relative; overflow: hidden; }
+    .hero-card::after { content: ''; position: absolute; bottom: -40px; right: -40px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+    .hero-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; opacity: 0.85; }
+    .hero-amount { font-size: 38px; font-weight: 800; letter-spacing: -1.5px; margin: 6px 0 2px; }
+    .hero-amount small { font-size: 18px; font-weight: 600; opacity: 0.8; letter-spacing: -0.5px; }
+    .hero-note { font-size: 12px; opacity: 0.9; }
+    .hero-bar { background: rgba(255,255,255,0.3); border-radius: 4px; height: 6px; margin-top: 14px; overflow: hidden; }
+    .hero-bar-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .hero-stats { display: flex; gap: 16px; margin-top: 12px; font-size: 12px; position: relative; z-index: 1; }
+    .hero-stats b { font-size: 15px; font-weight: 700; display: block; }
+
+    /* ── ALERT BANNER ── */
+    .alert-card { background: var(--white); border: 1px solid var(--border); border-left: 3px solid var(--amber); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin-top: 10px; }
+    .alert-card.red { border-left-color: var(--red); }
+    .alert-card b { color: var(--ink); }
+
+    /* ── ROWS ── */
+    .rec-list { display: flex; flex-direction: column; gap: 6px; }
+    .rec-row { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color 0.15s; overflow: hidden; }
+    .rec-row:hover { border-color: var(--violet); }
+    .rec-row.open { border-color: var(--blue); }
+    .rec-head { padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+    /* estado = elemento principal: círculo a la izquierda */
+    .st-icon {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid #d6d6e2; color: transparent; background: var(--white);
+    }
+    .st-icon svg { width: 14px; height: 14px; }
+    .is-paid    .st-icon { background: var(--green); border-color: var(--green); color: white; }
+    .is-missing .st-icon { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+    .is-warn    .st-icon { background: #fbeef1; border-color: #a3475e; color: #a3475e; }
+    .is-danger  .st-icon { background: var(--red); border-color: var(--red); color: white; }
+    .is-off     .st-icon { border-style: dashed; color: var(--ink-muted); }
+
+    .rec-main { flex: 1; min-width: 0; }
+    .rec-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rec-meta { font-size: 11px; color: var(--ink-muted); margin-top: 2px; display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+    .rec-when { font-weight: 600; color: var(--ink-soft); }
+    .is-missing .rec-when { color: var(--amber); }
+    .is-paid .rec-when, .is-warn .rec-when { color: var(--green); }
+    .review-note { font-weight: 600; color: var(--amber); }
+    .rec-right { text-align: right; flex-shrink: 0; }
+    .rec-amount { font-size: 14px; font-weight: 700; white-space: nowrap; }
+    .rec-amount .exp { font-size: 10px; font-weight: 600; color: #a3475e; }
+
+    /* pagados quedan atenuados: lo que falta es lo que salta a la vista */
+    .rec-row.is-paid .rec-name { font-weight: 500; color: var(--ink-soft); }
+    .rec-row.is-paid .rec-amount { font-weight: 600; color: var(--ink-muted); }
+
+    .sub-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--ink-muted); padding: 10px 16px 6px 18px; border-top: 1px solid var(--border); background: #fafafc;
+    }
+
+    .status { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; margin-top: 4px; white-space: nowrap; }
+    .st-paid    { background: var(--green-soft); color: var(--green); }
+    .st-pending { background: var(--violet-soft); color: var(--blue); }
+    .st-missing { background: var(--amber-soft); color: var(--amber); }
+    .st-warn    { background: #fbeef1; color: #a3475e; }
+    .st-danger  { background: var(--red-soft); color: var(--red); }
+    .st-off     { background: var(--gray-soft); color: var(--ink-muted); }
+
+    .rec-row.is-off { opacity: 0.6; }
+
+    .rec-detail { display: none; border-top: 1px solid var(--border); padding: 10px 14px 12px 56px; font-size: 11px; color: var(--ink-soft); line-height: 1.7; }
+    .rec-row.open .rec-detail { display: block; }
+    .rec-detail b { color: var(--ink); font-weight: 600; }
+
+    /* ── POR TARJETA ── */
+    .card-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 6px; }
+    .card-tile {
+      background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; font-family: 'Outfit', sans-serif; text-align: left;
+    }
+    .card-tile:hover { border-color: var(--violet); }
+    .card-tile.active { border-color: var(--tile-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tile-color) 15%, transparent); }
+    .card-tile-name { font-size: 11px; font-weight: 700; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
+    .card-tile-amount { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; margin-top: 4px; color: var(--ink); }
+    .card-tile-sub { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+    .card-tile-bar { background: var(--border); border-radius: 3px; height: 3px; margin-top: 8px; overflow: hidden; }
+    .card-tile-bar div { height: 100%; background: var(--tile-color); border-radius: 3px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+    /* ── GRUPOS ── */
+    .groups { display: flex; flex-direction: column; gap: 10px; }
+    .group { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; position: relative; }
+    .group::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--group-color); }
+    .group-head { padding: 14px 16px 12px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .group-icon {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      background: color-mix(in srgb, var(--group-color) 10%, white); color: var(--group-color);
+    }
+    .group-icon svg { width: 18px; height: 18px; }
+    .group-due { font-size: 11px; font-weight: 700; color: var(--blue); margin-top: 3px; white-space: nowrap; }
+    .group-due.missing { color: var(--amber); }
+    .group-due.done { color: var(--green); }
+    .group-info { flex: 1; min-width: 0; }
+    .group-name { font-size: 14px; font-weight: 700; }
+    .group-sub { font-size: 10px; color: var(--ink-muted); margin-top: 2px; }
+    .group-bar { background: var(--border); border-radius: 3px; height: 3px; margin-top: 7px; overflow: hidden; }
+    .group-bar div { height: 100%; background: var(--group-color); border-radius: 3px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .group-right { text-align: right; flex-shrink: 0; }
+    .group-amount { font-size: 15px; font-weight: 800; letter-spacing: -0.4px; }
+    .group-amount small { font-size: 11px; font-weight: 500; color: var(--ink-muted); letter-spacing: 0; }
+    .group-flags { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; }
+    .group-chevron { font-size: 9px; color: var(--ink-muted); transition: transform 0.2s; }
+    .group.open .group-chevron { transform: rotate(180deg); }
+    .group-body { display: none; }
+    .group.open .group-body { display: block; }
+    .group .rec-list { gap: 0; }
+    .group .rec-row { border: none; border-top: 1px solid var(--border); border-radius: 0; }
+    .group .rec-row:hover { background: var(--bg); }
+    .group .rec-row.open { background: var(--bg); }
+    .group .rec-head { padding: 10px 16px 10px 18px; }
+
+    .empty { text-align: center; font-size: 12px; color: var(--ink-muted); padding: 24px 0; }
+
+    .toggle-off { background: none; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600; color: var(--ink-muted); cursor: pointer; padding: 10px 0; }
+
+    footer { text-align: center; padding: 20px; font-size: 11px; color: var(--ink-muted); }
+
+    .fade-in { opacity: 0; transform: translateY(8px); animation: fadeUp 0.35s ease forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* ── SIDEBAR NAV ── */
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .nav-overlay.open { opacity: 1; pointer-events: all; }
+    .nav-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--white); z-index: 201; transform: translateX(-100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; }
+    .nav-sidebar.open { transform: translateX(0); }
+    .nav-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .nav-logo-mark { width: 24px; height: 24px; background: var(--grad); border-radius: 6px; flex-shrink: 0; }
+    .nav-logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.5px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-links { padding: 12px 8px; flex: 1; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 500; color: var(--ink-soft); transition: background 0.15s; }
+    .nav-link:hover { background: var(--bg); color: var(--ink); }
+    .nav-link.active { background: rgba(115,119,236,0.1); color: var(--blue); font-weight: 600; }
+    .nav-link-icon { font-size: 18px; width: 24px; text-align: center; }
+    .hamburger { background: none; border: none; cursor: pointer; padding: 8px; display: flex; flex-direction: column; gap: 4px; border-radius: 8px; transition: background 0.15s; }
+    .hamburger:hover { background: var(--bg); }
+    .hamburger span { display: block; width: 18px; height: 2px; background: var(--ink-soft); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar nav -->
+<div class="nav-overlay" id="navOverlay" onclick="closeSidebar()"></div>
+<nav class="nav-sidebar" id="navSidebar">
+  <div class="nav-header">
+    <div class="nav-logo-mark"></div>
+    <div class="nav-logo-name">Palette</div>
+  </div>
+  <div class="nav-links">
+    <a href="/palette"     class="nav-link"><span class="nav-link-icon">📊</span> Dashboard</a>
+    <a href="/pl"          class="nav-link"><span class="nav-link-icon">📑</span> P&amp;L</a>
+    <a href="/datos"       class="nav-link"><span class="nav-link-icon">🗂️</span> Datos</a>
+    <a href="/recurrentes" class="nav-link active"><span class="nav-link-icon">🔁</span> Recurrentes</a>
+    <a href="/clasificar"  class="nav-link"><span class="nav-link-icon">🏦</span> N26</a>
+    <a href="/amex"        class="nav-link"><span class="nav-link-icon">💳</span> Interbank</a>
+    <a href="/despensa"    class="nav-link"><span class="nav-link-icon">🛒</span> Despensa</a>
+  </div>
+</nav>
+
+<header>
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="/palette" class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-name">Recurrentes</div>
+      </a>
+    </div>
+    <div class="month-pill" id="currentMonthBadge">cargando...</div>
+  </div>
+</header>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Cargando pagos recurrentes...</div>
+</div>
+
+<main id="mainContent" style="display:none">
+  <div class="month-tabs" id="monthTabs"></div>
+
+  <div class="hero-card fade-in">
+    <div class="hero-label">Pagado este mes</div>
+    <div class="hero-amount" id="heroAmount">€0</div>
+    <div class="hero-note" id="heroNote"></div>
+    <div class="hero-bar"><div class="hero-bar-fill" id="heroBar" style="width:0%"></div></div>
+    <div class="hero-stats" id="heroStats"></div>
+  </div>
+
+  <div id="alerts"></div>
+
+  <div class="section-label">Por tarjeta</div>
+  <div class="card-strip" id="cardStrip"></div>
+
+  <div class="section-label">Pagos del mes</div>
+  <div class="filter-chips" id="filterChips"></div>
+  <div class="groups" id="groups"></div>
+
+  <button class="toggle-off" id="toggleOff" onclick="toggleOff()"></button>
+  <div class="rec-list" id="offList" style="display:none"></div>
+</main>
+
+<footer>Palette · spark-datahub · v_recurring_monitor</footer>
+
+<script>
+const API_URL = '/api/recurring';
+
+// alert (de v_recurring_monitor) → estado de UI
+const STATUS = {
+  '🟢 ok':                  { key: 'paid',    label: 'Pagado',          cls: 'st-paid',    row: 'is-paid' },
+  '🟠 cobro extra':         { key: 'alert',   label: 'Cobro extra',     cls: 'st-warn',    row: 'is-warn' },
+  '🟠 monto distinto':      { key: 'alert',   label: 'Monto distinto',  cls: 'st-warn',    row: 'is-warn' },
+  '⏳ pendiente':           { key: 'pending', label: 'Pendiente',       cls: 'st-pending', row: '' },
+  '🟡 falta cobro':         { key: 'missing', label: 'No pagado',       cls: 'st-missing', row: 'is-missing' },
+  '🔴 cobro tras cancelar': { key: 'alert',   label: 'Cobró cancelado', cls: 'st-danger',  row: 'is-danger' },
+  '⚪ cancelado':           { key: 'off',     label: 'Cancelado',       cls: 'st-off',     row: 'is-off' },
+  '⚪ sin cobro este mes':  { key: 'off',     label: 'Sin cobro',       cls: 'st-off',     row: 'is-off' },
+};
+
+const FILTERS = [
+  { key: 'all',     label: 'Todos' },
+  { key: 'paid',    label: 'Pagados' },
+  { key: 'pending', label: 'Pendientes' },
+  { key: 'missing', label: 'No pagados' },
+  { key: 'alert',   label: 'Alertas' },
+];
+
+// bucket (de recurring_vendors) → grupo visual, en este orden
+// iconos de línea (stroke = color del grupo), sin emojis
+const svg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICONS = {
+  home:   svg('<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>'),
+  shield: svg('<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/>'),
+  play:   svg('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/>'),
+  spark:  svg('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>'),
+  phone:  svg('<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>'),
+  case:   svg('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>'),
+  check:  svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
+  alert:  svg('<path d="M12 7v6M12 17h.01"/>'),
+  dash:   svg('<path d="M8 12h8"/>'),
+};
+
+const GROUPS = [
+  { key: 'fijos',       icon: 'home',   name: 'Fijos del hogar',  sub: 'Renta, luz, internet, transporte', color: '#5B52A0' },
+  { key: 'compromisos', icon: 'shield', name: 'Seguros y cuotas', sub: 'Seguro, gimnasio, compras a plazos', color: '#0891b2' },
+  { key: 'streaming',   icon: 'play',   name: 'Streaming',        sub: 'Video, música, audiolibros',        color: '#C47B8E' },
+  { key: 'digital',     icon: 'spark',  name: 'IA, apps y nube',  sub: 'ChatGPT, Claude, Adobe, Apple, Google', color: '#7B72C0' },
+  { key: 'peru',        icon: 'phone',  name: 'Perú',             sub: 'Líneas Movistar',                   color: '#b45309' },
+  { key: 'avellana',    icon: 'case',   name: 'Avellana',         sub: 'Gasto del proyecto',                color: '#00875a' },
+];
+
+const CARDS = [
+  { key: 'N26',                 label: 'N26',    color: '#2b8a8a', match: c => c === 'N26' || c === 'N26 Family' },
+  { key: 'Interbank Premia',    label: 'Premia', color: '#0a9d58', match: c => c === 'Interbank Premia' },
+  { key: 'Interbank AMEX 6765', label: 'AMEX',   color: '#2e6fbb', match: c => c === 'Interbank AMEX 6765' },
+  { key: 'other',               label: 'Varias', color: '#9a9aaa', match: c => !c },
+];
+const cardOf = c => CARDS.find(k => k.match(c)) || CARDS[CARDS.length - 1];
+
+const MONTH_NAMES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+let allRows = [], months = [], selectedMonth = null, selectedFilter = 'all', selectedCard = null, showOff = false;
+let openGroups = null; // null = abrir por defecto los que tienen algo pendiente
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const eur = n => '€' + Math.round(Number(n) || 0).toLocaleString('de-DE');
+const eur2 = n => '€' + (Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const monthLabel = m => { const [y, mm] = m.split('-'); return `${MONTH_NAMES[+mm - 1]} ${y.slice(2)}`; };
+const shortCard = c => !c ? 'cualquier tarjeta'
+  : c.replace('Interbank AMEX 6765', 'AMEX').replace('Interbank Premia', 'Premia');
+const statusOf = r => STATUS[r.alert] || { key: 'pending', label: r.alert, cls: 'st-off', row: '' };
+
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error((await res.json()).error || res.status);
+    allRows = await res.json();
+    months = [...new Set(allRows.map(r => r.month))].sort().reverse();
+    selectedMonth = months[0];
+    renderAll();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      `<div class="loading-text">No se pudieron cargar los datos: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderAll() {
+  document.getElementById('currentMonthBadge').textContent = monthLabel(selectedMonth);
+  renderMonthTabs();
+  const rows = allRows.filter(r => r.month === selectedMonth);
+  const live = rows.filter(r => statusOf(r).key !== 'off');
+  const off  = rows.filter(r => statusOf(r).key === 'off');
+  renderHero(live);
+  renderAlerts(live);
+  renderCards(live);
+  const visible = selectedCard ? live.filter(r => cardOf(r.card).key === selectedCard) : live;
+  renderChips(visible);
+  renderGroups(visible);
+  renderOff(off);
+}
+
+function renderCards(live) {
+  document.getElementById('cardStrip').innerHTML = CARDS.map(c => {
+    const rows = live.filter(r => cardOf(r.card).key === c.key);
+    if (!rows.length) return '';
+    const exp  = rows.reduce((s, r) => s + (Number(r.expected_eur) || 0), 0);
+    const paid = rows.reduce((s, r) => s + (Number(r.charged_eur) || 0), 0);
+    const pct  = exp ? Math.min(100, paid / exp * 100) : 0;
+    return `
+      <button class="card-tile ${selectedCard === c.key ? 'active' : ''}" style="--tile-color:${c.color}" onclick="selectCard('${c.key}')">
+        <div class="card-tile-name"><span class="dot" style="background:${c.color}"></span>${c.label}</div>
+        <div class="card-tile-amount">${eur(paid)}</div>
+        <div class="card-tile-sub">de ${eur(exp)} · ${rows.length} pagos</div>
+        <div class="card-tile-bar"><div style="width:${pct}%"></div></div>
+      </button>`;
+  }).join('');
+}
+
+function renderGroups(live) {
+  const rows = live.filter(r => selectedFilter === 'all' || statusOf(r).key === selectedFilter);
+  if (openGroups === null) {
+    openGroups = new Set(GROUPS.filter(g =>
+      rows.some(r => (r.bucket || 'digital') === g.key && statusOf(r).key !== 'paid')).map(g => g.key));
+  }
+  const html = GROUPS.map(g => {
+    const items = rows.filter(r => (r.bucket || 'digital') === g.key)
+      .sort((a, b) => (a.expected_day ?? 99) - (b.expected_day ?? 99));
+    if (!items.length) return '';
+    const exp  = items.reduce((s, r) => s + (Number(r.expected_eur) || 0), 0);
+    const paid = items.reduce((s, r) => s + (Number(r.charged_eur) || 0), 0);
+    const pct  = exp ? Math.min(100, paid / exp * 100) : 0;
+    // primero lo que requiere atención, luego lo pagado (atenuado y separado)
+    const ORDER = { missing: 0, alert: 1, pending: 2, paid: 3 };
+    const todo = items.filter(r => statusOf(r).key !== 'paid')
+      .sort((a, b) => ORDER[statusOf(a).key] - ORDER[statusOf(b).key] || (a.expected_day ?? 99) - (b.expected_day ?? 99));
+    const done = items.filter(r => statusOf(r).key === 'paid');
+    const owed = todo.filter(r => r.n_charges === 0).reduce((s, r) => s + (Number(r.expected_eur) || 0), 0);
+    const nMissing = todo.filter(r => statusOf(r).key === 'missing').length;
+    const due = !todo.length
+      ? `<div class="group-due done">Todo pagado</div>`
+      : nMissing
+        ? `<div class="group-due missing">${nMissing} sin pagar</div>`
+        : `<div class="group-due">${owed ? eur(owed) + ' por pagar' : todo.length + ' por revisar'}</div>`;
+    return `
+      <div class="group ${openGroups.has(g.key) ? 'open' : ''}" style="--group-color:${g.color}">
+        <div class="group-head" onclick="toggleGroup('${g.key}')">
+          <div class="group-icon">${ICONS[g.icon]}</div>
+          <div class="group-info">
+            <div class="group-name">${g.name}</div>
+            <div class="group-sub">${done.length} de ${items.length} pagados · ${g.sub}</div>
+            <div class="group-bar"><div style="width:${pct}%"></div></div>
+          </div>
+          <div class="group-right">
+            <div class="group-amount">${eur(paid)} <small>/ ${eur(exp)}</small></div>
+            ${due}
+          </div>
+          <div class="group-chevron">▼</div>
+        </div>
+        <div class="group-body">
+          ${todo.length ? `<div class="rec-list">${todo.map(rowHtml).join('')}</div>` : ''}
+          ${done.length ? `<div class="sub-label">Pagados · ${done.length}</div><div class="rec-list">${done.map(rowHtml).join('')}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('groups').innerHTML = html || '<div class="empty">Nada por aquí 🎉</div>';
+}
+
+function renderMonthTabs() {
+  document.getElementById('monthTabs').innerHTML = months.map(m =>
+    `<button class="month-tab ${m === selectedMonth ? 'active' : ''}" onclick="selectMonth('${m}')">${monthLabel(m)}</button>`
+  ).join('');
+}
+
+function renderHero(live) {
+  const expected = live.reduce((s, r) => s + (Number(r.expected_eur) || 0), 0);
+  const paid     = live.reduce((s, r) => s + (Number(r.charged_eur) || 0), 0);
+  const nPaid    = live.filter(r => r.n_charges > 0).length;
+  const nPend    = live.filter(r => statusOf(r).key === 'pending').length;
+  const nMiss    = live.filter(r => statusOf(r).key === 'missing').length;
+  const pct      = expected ? Math.min(100, paid / expected * 100) : 0;
+
+  document.getElementById('heroAmount').innerHTML = `${eur(paid)} <small>/ ${eur(expected)}</small>`;
+  document.getElementById('heroNote').textContent =
+    `${nPaid} de ${live.length} pagos cobrados · faltan ~${eur(Math.max(0, expected - paid))}`;
+  document.getElementById('heroBar').style.width = pct + '%';
+  document.getElementById('heroStats').innerHTML = `
+    <div><b>${nPaid}</b>pagados</div>
+    <div><b>${nPend}</b>pendientes</div>
+    <div><b>${nMiss}</b>no pagados</div>`;
+}
+
+function renderAlerts(live) {
+  const alerts = live.filter(r => statusOf(r).key === 'alert');
+  document.getElementById('alerts').innerHTML = alerts.map(r => {
+    const st = statusOf(r);
+    const red = st.cls === 'st-danger';
+    return `<div class="alert-card ${red ? 'red' : ''}"><b>${esc(r.vendor)}</b> · ${esc(st.label.toLowerCase())}: ` +
+      `${r.n_charges} cobro${r.n_charges === 1 ? '' : 's'} por ${eur2(r.charged_eur)}` +
+      (r.expected_eur ? ` (esperado ${eur2(r.expected_eur)})` : '') + `</div>`;
+  }).join('');
+}
+
+function renderChips(live) {
+  const count = k => k === 'all' ? live.length : live.filter(r => statusOf(r).key === k).length;
+  document.getElementById('filterChips').innerHTML = FILTERS
+    .filter(f => f.key === 'all' || count(f.key) > 0)
+    .map(f => `<button class="chip ${f.key === selectedFilter ? 'active' : ''}" onclick="selectFilter('${f.key}')">` +
+              `${f.label}<span class="chip-count">${count(f.key)}</span></button>`).join('');
+}
+
+const fmtDay = (m, d) => `${+d} ${MONTH_NAMES[+m - 1]}`;
+const chargeDates = r => r.charge_days ? r.charge_days.split(',').map(x => fmtDay(...x.split('-'))) : [];
+
+// texto de estado en lenguaje claro: lo que pasó o lo que va a pasar
+function whenText(r) {
+  const st = statusOf(r), dates = chargeDates(r);
+  const due = r.expected_day ? fmtDay(selectedMonth.slice(5), r.expected_day) : null;
+  switch (st.label) {
+    case 'Pagado':          return `Pagado el ${dates[0]}`;
+    case 'Cobro extra':     return `Cobrado ${r.n_charges} veces · ${dates.join(', ')}`;
+    case 'Monto distinto':  return `Pagado el ${dates[0]} · monto distinto`;
+    case 'Pendiente':       return due ? `Vence el ${due}` : 'Pendiente';
+    case 'No pagado':       return due ? `No pagado · tocaba el ${due}` : 'No pagado';
+    case 'Cobró cancelado': return `Cobró estando cancelado · ${dates.join(', ')}`;
+    default:                return st.label;
+  }
+}
+
+function rowHtml(r) {
+  const st = statusOf(r);
+  const icon = { paid: 'check', alert: 'alert', missing: 'alert', off: 'dash' }[st.key] || null;
+  const amount = r.n_charges > 0 ? eur2(r.charged_eur) : (r.expected_eur ? eur2(r.expected_eur) : 'variable');
+  const showExp = st.key === 'alert' && r.expected_eur;
+  const freq = r.every_n_months === 2 ? 'bimestral' : r.every_n_months === 1 ? 'mensual' : 'irregular';
+  return `
+    <div class="rec-row ${st.row}" onclick="this.classList.toggle('open')">
+      <div class="rec-head">
+        <div class="st-icon" title="${esc(st.label)}">${icon ? ICONS[icon] : ''}</div>
+        <div class="rec-main">
+          <div class="rec-name">${esc(r.vendor)}</div>
+          <div class="rec-meta">
+            <span class="rec-when">${esc(whenText(r))}</span>
+            <span>·</span><span class="dot" style="background:${cardOf(r.card).color}"></span><span>${esc(shortCard(r.card))}</span>
+            ${r.status === 'review' ? '<span>·</span><span class="review-note">revisar</span>' : ''}
+          </div>
+        </div>
+        <div class="rec-right">
+          <div class="rec-amount">${amount}${showExp ? `<div class="exp">esperado ${eur2(r.expected_eur)}</div>` : ''}</div>
+        </div>
+      </div>
+      <div class="rec-detail">
+        <div><b>Cobros:</b> ${esc(chargeDates(r).join(', ') || 'ninguno todavía')}</div>
+        <div><b>Esperado:</b> ${r.expected_eur ? eur2(r.expected_eur) : 'variable'} · ${freq}${r.expected_day ? ` · día ${r.expected_day}` : ''}</div>
+        <div><b>Tarjeta:</b> ${esc(r.card || 'cualquiera')} · <b>De:</b> ${esc(r.owner)}</div>
+        ${r.notes ? `<div><b>Nota:</b> ${esc(r.notes)}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderOff(off) {
+  const btn = document.getElementById('toggleOff');
+  btn.style.display = off.length ? 'block' : 'none';
+  btn.textContent = `${showOff ? '▾' : '▸'} Cancelados y pausados (${off.length})`;
+  const list = document.getElementById('offList');
+  list.style.display = showOff ? 'flex' : 'none';
+  list.innerHTML = off.map(rowHtml).join('');
+}
+
+function selectMonth(m)  { selectedMonth = m; selectedFilter = 'all'; selectedCard = null; openGroups = null; renderAll(); }
+function selectFilter(f) { selectedFilter = f; openGroups = f === 'all' ? null : new Set(GROUPS.map(g => g.key)); renderAll(); }
+function selectCard(c)   { selectedCard = selectedCard === c ? null : c; renderAll(); }
+function toggleGroup(g)  { openGroups.has(g) ? openGroups.delete(g) : openGroups.add(g); renderAll(); }
+function toggleOff()     { showOff = !showOff; renderAll(); }
+
+function openSidebar()  {
+  document.getElementById('navSidebar').classList.add('open');
+  document.getElementById('navOverlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('navSidebar').classList.remove('open');
+  document.getElementById('navOverlay').classList.remove('open');
+}
+
+loadData();
+</script>
+</body>
+</html>
